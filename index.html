@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>Absensi Digital — X RPL · SMKN 1 Mempawah Hulu</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #0a0f1e;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --text: #f0f4ff;
+    --muted: #8896b3;
+    --accent: #3b82f6;
+    --accent-glow: rgba(59,130,246,0.25);
+    --green: #22c55e;
+    --green-bg: rgba(34,197,94,0.12);
+    --green-border: rgba(34,197,94,0.3);
+    --red: #ef4444;
+    --red-bg: rgba(239,68,68,0.12);
+    --red-border: rgba(239,68,68,0.3);
+    --yellow: #f59e0b;
+    --yellow-bg: rgba(245,158,11,0.12);
+    --yellow-border: rgba(245,158,11,0.3);
+    --blue-bg: rgba(59,130,246,0.12);
+    --blue-border: rgba(59,130,246,0.3);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  /* bg grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(59,130,246,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59,130,246,0.03) 1px, transparent 1px);
+    background-size: 32px 32px;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .container { max-width: 480px; margin: 0 auto; padding: 1.5rem 1rem 4rem; position: relative; z-index: 1; }
+
+  /* header */
+  .school-badge {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--surface); border: 1px solid var(--border2);
+    border-radius: 12px; padding: 10px 14px; margin-bottom: 1.5rem;
+  }
+  .school-icon {
+    width: 36px; height: 36px; border-radius: 8px;
+    background: var(--accent-glow); border: 1px solid var(--blue-border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .school-name { font-size: 12px; font-weight: 600; color: var(--text); line-height: 1.3; }
+  .school-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+  /* clock */
+  .clock-card {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 16px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .clock-card::after {
+    content: '';
+    position: absolute;
+    top: -40px; left: 50%; transform: translateX(-50%);
+    width: 160px; height: 80px;
+    background: var(--accent-glow);
+    border-radius: 50%;
+    filter: blur(30px);
+    pointer-events: none;
+  }
+  .clock-time {
+    font-family: 'DM Mono', monospace;
+    font-size: 42px; font-weight: 500;
+    color: var(--text); letter-spacing: 2px;
+    line-height: 1;
+  }
+  .clock-date { font-size: 13px; color: var(--muted); margin-top: 6px; }
+  .clock-wib {
+    display: inline-block; margin-top: 8px;
+    font-size: 11px; font-weight: 600;
+    background: var(--blue-bg); border: 1px solid var(--blue-border);
+    color: var(--accent); border-radius: 6px; padding: 2px 8px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* window info */
+  .window-row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 1rem;
+  }
+  .window-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 10px 12px;
+  }
+  .window-label { font-size: 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .window-time { font-size: 13px; font-weight: 600; color: var(--text); margin-top: 3px; font-family: 'DM Mono', monospace; }
+  .window-status { font-size: 11px; margin-top: 4px; font-weight: 500; }
+  .open { color: var(--green); }
+  .closed { color: var(--red); }
+
+  /* GPS */
+  .gps-bar {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 10px 14px;
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 1rem;
+  }
+  .gps-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--muted); flex-shrink: 0;
+    transition: background 0.3s;
+  }
+  .gps-dot.ok { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .gps-dot.err { background: var(--red); }
+  .gps-dot.loading { background: var(--yellow); animation: blink 1s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .gps-text { font-size: 12px; color: var(--muted); flex: 1; }
+  .gps-dist { font-size: 11px; font-family: 'DM Mono', monospace; color: var(--muted); }
+
+  /* student select */
+  .section-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .select-wrap { position: relative; margin-bottom: 1rem; }
+  .select-wrap select {
+    width: 100%;
+    background: var(--surface); border: 1px solid var(--border2);
+    color: var(--text); border-radius: 12px;
+    padding: 12px 40px 12px 14px;
+    font-size: 14px; font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 500; appearance: none; cursor: pointer;
+    outline: none;
+  }
+  .select-wrap select:focus { border-color: var(--accent); }
+  .select-arrow {
+    position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+    color: var(--muted); pointer-events: none; font-size: 12px;
+  }
+
+  /* absen buttons */
+  .absen-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1rem; }
+  .absen-btn {
+    border: 1px solid var(--border2);
+    border-radius: 14px; padding: 1rem;
+    background: var(--surface); cursor: pointer;
+    transition: all 0.2s; text-align: center;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    position: relative; overflow: hidden;
+  }
+  .absen-btn:active { transform: scale(0.97); }
+  .absen-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .absen-btn .btn-icon { font-size: 24px; }
+  .absen-btn .btn-label { font-size: 13px; font-weight: 600; color: var(--text); }
+  .absen-btn .btn-sub { font-size: 10px; color: var(--muted); font-family: 'DM Mono', monospace; }
+  .absen-btn.masuk { border-color: var(--green-border); }
+  .absen-btn.masuk:not(:disabled):hover { background: var(--green-bg); border-color: var(--green); }
+  .absen-btn.pulang { border-color: var(--blue-border); }
+  .absen-btn.pulang:not(:disabled):hover { background: var(--blue-bg); border-color: var(--accent); }
+  .absen-btn.done-masuk { background: var(--green-bg); border-color: var(--green); }
+  .absen-btn.done-pulang { background: var(--blue-bg); border-color: var(--accent); }
+
+  /* log */
+  .log-wrap { margin-top: 1rem; }
+  .log-item {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 14px;
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 6px; animation: fadeIn 0.3s ease;
+  }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:none} }
+  .log-name { font-size: 13px; font-weight: 600; color: var(--text); }
+  .log-type { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .log-time { font-size: 12px; font-family: 'DM Mono', monospace; color: var(--muted); }
+  .log-badge {
+    font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 6px; margin-left: 8px;
+  }
+  .badge-masuk { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .badge-pulang { background: var(--blue-bg); color: var(--accent); border: 1px solid var(--blue-border); }
+
+  /* toast */
+  .toast {
+    position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--surface2); border: 1px solid var(--border2);
+    border-radius: 12px; padding: 12px 20px;
+    font-size: 13px; font-weight: 500; color: var(--text);
+    opacity: 0; pointer-events: none; transition: all 0.25s; z-index: 999;
+    white-space: nowrap; max-width: 90vw; text-align: center;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.success { border-color: var(--green-border); color: var(--green); }
+  .toast.error { border-color: var(--red-border); color: var(--red); }
+  .toast.warn { border-color: var(--yellow-border); color: var(--yellow); }
+
+  /* modal */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 998; padding: 1rem; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  }
+  .modal-overlay.show { opacity: 1; pointer-events: all; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border2);
+    border-radius: 20px; padding: 1.5rem; width: 100%; max-width: 340px;
+    transform: scale(0.95); transition: transform 0.2s;
+  }
+  .modal-overlay.show .modal { transform: scale(1); }
+  .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+  .modal-sub { font-size: 13px; color: var(--muted); margin-bottom: 1.25rem; }
+  .modal-confirm {
+    width: 100%; padding: 12px; border-radius: 12px;
+    border: none; font-size: 14px; font-weight: 600;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    cursor: pointer; transition: opacity 0.15s;
+  }
+  .modal-confirm:active { opacity: 0.8; }
+  .modal-confirm.green { background: var(--green); color: #fff; }
+  .modal-confirm.blue { background: var(--accent); color: #fff; }
+  .modal-cancel {
+    width: 100%; padding: 10px; border-radius: 12px; margin-top: 8px;
+    border: 1px solid var(--border2); background: transparent;
+    color: var(--muted); font-size: 13px; font-family: 'Plus Jakarta Sans', sans-serif;
+    cursor: pointer;
+  }
+  .modal-icon { font-size: 36px; margin-bottom: 10px; }
+
+  .empty-log { text-align: center; color: var(--muted); font-size: 13px; padding: 1.5rem 0; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- School badge -->
+  <div class="school-badge">
+    <div class="school-icon">🏫</div>
+    <div>
+      <div class="school-name">SMKN 1 Mempawah Hulu</div>
+      <div class="school-sub">Absensi Digital · Kelas X RPL</div>
+    </div>
+  </div>
+
+  <!-- Clock -->
+  <div class="clock-card">
+    <div class="clock-time" id="clock">00:00:00</div>
+    <div class="clock-date" id="clockDate">—</div>
+    <div class="clock-wib">WIB</div>
+  </div>
+
+  <!-- Window info -->
+  <div class="window-row">
+    <div class="window-card">
+      <div class="window-label">Absen Masuk</div>
+      <div class="window-time" id="winMasukTime">06:30 – 07:15</div>
+      <div class="window-status" id="winMasukStatus">—</div>
+    </div>
+    <div class="window-card">
+      <div class="window-label">Absen Pulang</div>
+      <div class="window-time" id="winPulangTime">—</div>
+      <div class="window-status" id="winPulangStatus">—</div>
+    </div>
+  </div>
+
+  <!-- GPS -->
+  <div class="gps-bar">
+    <div class="gps-dot loading" id="gpsDot"></div>
+    <div class="gps-text" id="gpsText">Mendeteksi lokasi...</div>
+    <div class="gps-dist" id="gpsDist"></div>
+  </div>
+
+  <!-- Select student -->
+  <div class="section-label">Pilih nama kamu</div>
+  <div class="select-wrap">
+    <select id="siswaSelect">
+      <option value="">-- Pilih nama siswa --</option>
+      <option>Adelia Putri</option>
+      <option>Aditya Nugraha</option>
+      <option>Ahmad Fauzan</option>
+      <option>Aisyah Ramadhani</option>
+      <option>Alfarizi Pratama</option>
+      <option>Amanda Sari</option>
+      <option>Arif Hidayat</option>
+      <option>Bagas Setiawan</option>
+      <option>Bella Nur Azizah</option>
+      <option>Dafa Ramadhan</option>
+      <option>Dinda Permatasari</option>
+      <option>Eko Prasetyo</option>
+      <option>Elsa Kurniawan</option>
+      <option>Fajar Maulana</option>
+      <option>Farhan Alamsyah</option>
+      <option>Fikri Ramadhan</option>
+      <option>Gilang Saputra</option>
+      <option>Hana Lestari</option>
+      <option>Ilham Surya</option>
+      <option>Intan Novita</option>
+      <option>Kevin Andrianto</option>
+      <option>Laila Nur Fadilah</option>
+      <option>Muhammad Rizky</option>
+      <option>Nadia Fitriani</option>
+      <option>Naufal Hakim</option>
+      <option>Putri Anggraeni</option>
+      <option>Raihan Akbar</option>
+      <option>Reza Firmansyah</option>
+      <option>Siti Nurhaliza</option>
+      <option>Yoga Praditya</option>
+    </select>
+    <div class="select-arrow">▼</div>
+  </div>
+
+  <!-- Absen buttons -->
+  <div class="absen-grid">
+    <button class="absen-btn masuk" id="btnMasuk" onclick="triggerAbsen('masuk')" disabled>
+      <span class="btn-icon">✅</span>
+      <span class="btn-label">Absen Masuk</span>
+      <span class="btn-sub" id="subMasuk">06:30 – 07:15</span>
+    </button>
+    <button class="absen-btn pulang" id="btnPulang" onclick="triggerAbsen('pulang')" disabled>
+      <span class="btn-icon">🏠</span>
+      <span class="btn-label">Absen Pulang</span>
+      <span class="btn-sub" id="subPulang">—</span>
+    </button>
+  </div>
+
+  <!-- Log -->
+  <div class="section-label">Log absensi hari ini</div>
+  <div class="log-wrap" id="logWrap">
+    <div class="empty-log">Belum ada absensi hari ini</div>
+  </div>
+
+</div>
+
+<!-- Modal konfirmasi -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-icon" id="modalIcon">✅</div>
+    <div class="modal-title" id="modalTitle">Konfirmasi Absen</div>
+    <div class="modal-sub" id="modalSub">—</div>
+    <button class="modal-confirm green" id="modalConfirm" onclick="confirmAbsen()">Ya, Absen Sekarang</button>
+    <button class="modal-cancel" onclick="closeModal()">Batal</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// =====================
+// KONFIGURASI
+// =====================
+const SCHOOL_LAT = 0.5488;
+const SCHOOL_LNG = 109.3815;
+const RADIUS_M = 200; // radius GPS dalam meter
+
+const JADWAL = {
+  // 1=Senin, 2=Selasa, 3=Rabu, 4=Kamis, 5=Jumat
+  masuk: { buka: '06:30', tutup: '07:15' },
+  seninjumat: {
+    '1': { buka: '14:05', tutup: '14:20' },
+    '2': { buka: '14:05', tutup: '14:20' },
+    '3': { buka: '14:05', tutup: '14:20' },
+    '4': { buka: '14:05', tutup: '14:20' },
+    '5': { buka: '11:55', tutup: '12:20' },
+  }
+};
+
+const HARI_NAMA = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+const BULAN_NAMA = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+
+// =====================
+// STATE
+// =====================
+let gpsOk = false;
+let userLat = null, userLng = null;
+let pendingType = null;
+let logs = JSON.parse(localStorage.getItem('absen_logs_' + todayKey()) || '[]');
+
+function todayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+}
+
+function saveLog() {
+  localStorage.setItem('absen_logs_' + todayKey(), JSON.stringify(logs));
+}
+
+// =====================
+// CLOCK
+// =====================
+function updateClock() {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2,'0');
+  const m = String(now.getMinutes()).padStart(2,'0');
+  const s = String(now.getSeconds()).padStart(2,'0');
+  document.getElementById('clock').textContent = `${h}:${m}:${s}`;
+
+  const hari = HARI_NAMA[now.getDay()];
+  const tgl = now.getDate();
+  const bln = BULAN_NAMA[now.getMonth()];
+  const thn = now.getFullYear();
+  document.getElementById('clockDate').textContent = `${hari}, ${tgl} ${bln} ${thn}`;
+
+  updateWindowStatus(now);
+  updateButtons(now);
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// =====================
+// WINDOW STATUS
+// =====================
+function parseTime(str) {
+  const [h, m] = str.split(':').map(Number);
+  return h * 60 + m;
+}
+
+function getNowMinutes(now) {
+  return now.getHours() * 60 + now.getMinutes();
+}
+
+function isWindowOpen(bukaStr, tutupStr, now) {
+  const cur = getNowMinutes(now);
+  return cur >= parseTime(bukaStr) && cur <= parseTime(tutupStr);
+}
+
+function updateWindowStatus(now) {
+  const day = now.getDay();
+  const validDay = day >= 1 && day <= 5;
+
+  // masuk
+  const wMasuk = document.getElementById('winMasukStatus');
+  if (!validDay) {
+    wMasuk.textContent = 'Libur'; wMasuk.className = 'window-status closed';
+  } else if (isWindowOpen(JADWAL.masuk.buka, JADWAL.masuk.tutup, now)) {
+    wMasuk.textContent = 'Sedang buka'; wMasuk.className = 'window-status open';
+  } else {
+    const cur = getNowMinutes(now);
+    wMasuk.textContent = cur < parseTime(JADWAL.masuk.buka) ? 'Belum buka' : 'Sudah tutup';
+    wMasuk.className = 'window-status closed';
+  }
+
+  // pulang
+  const jadPulang = JADWAL.seninjumat[String(day)];
+  const wPulangTime = document.getElementById('winPulangTime');
+  const wPulangStatus = document.getElementById('winPulangStatus');
+  const subPulang = document.getElementById('subPulang');
+
+  if (!validDay || !jadPulang) {
+    wPulangTime.textContent = '—';
+    wPulangStatus.textContent = 'Libur'; wPulangStatus.className = 'window-status closed';
+    subPulang.textContent = '—';
+  } else {
+    wPulangTime.textContent = `${jadPulang.buka} – ${jadPulang.tutup}`;
+    subPulang.textContent = `${jadPulang.buka} – ${jadPulang.tutup}`;
+    if (isWindowOpen(jadPulang.buka, jadPulang.tutup, now)) {
+      wPulangStatus.textContent = 'Sedang buka'; wPulangStatus.className = 'window-status open';
+    } else {
+      const cur = getNowMinutes(now);
+      wPulangStatus.textContent = cur < parseTime(jadPulang.buka) ? 'Belum buka' : 'Sudah tutup';
+      wPulangStatus.className = 'window-status closed';
+    }
+  }
+}
+
+// =====================
+// BUTTONS
+// =====================
+function updateButtons(now) {
+  const siswa = document.getElementById('siswaSelect').value;
+  const day = now.getDay();
+  const validDay = day >= 1 && day <= 5;
+  const jadPulang = JADWAL.seninjumat[String(day)];
+
+  const sudahMasuk = siswa && logs.some(l => l.nama === siswa && l.type === 'masuk');
+  const sudahPulang = siswa && logs.some(l => l.nama === siswa && l.type === 'pulang');
+
+  const btnM = document.getElementById('btnMasuk');
+  const btnP = document.getElementById('btnPulang');
+
+  // masuk
+  if (sudahMasuk) {
+    btnM.disabled = true;
+    btnM.className = 'absen-btn masuk done-masuk';
+    btnM.querySelector('.btn-label').textContent = 'Sudah Absen';
+  } else {
+    const canMasuk = validDay && gpsOk && isWindowOpen(JADWAL.masuk.buka, JADWAL.masuk.tutup, now) && !!siswa;
+    btnM.disabled = !canMasuk;
+    btnM.className = 'absen-btn masuk';
+    btnM.querySelector('.btn-label').textContent = 'Absen Masuk';
+  }
+
+  // pulang
+  if (sudahPulang) {
+    btnP.disabled = true;
+    btnP.className = 'absen-btn pulang done-pulang';
+    btnP.querySelector('.btn-label').textContent = 'Sudah Absen';
+  } else {
+    const canPulang = validDay && gpsOk && jadPulang && isWindowOpen(jadPulang.buka, jadPulang.tutup, now) && !!siswa && sudahMasuk;
+    btnP.disabled = !canPulang;
+    btnP.className = 'absen-btn pulang';
+    btnP.querySelector('.btn-label').textContent = 'Absen Pulang';
+  }
+}
+
+document.getElementById('siswaSelect').addEventListener('change', () => updateButtons(new Date()));
+
+// =====================
+// GPS
+// =====================
+function haversine(lat1, lng1, lat2, lng2) {
+  const R = 6371000;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function startGPS() {
+  if (!navigator.geolocation) {
+    document.getElementById('gpsText').textContent = 'GPS tidak didukung browser ini';
+    document.getElementById('gpsDot').className = 'gps-dot err';
+    return;
+  }
+  navigator.geolocation.watchPosition(pos => {
+    userLat = pos.coords.latitude;
+    userLng = pos.coords.longitude;
+    const dist = haversine(userLat, userLng, SCHOOL_LAT, SCHOOL_LNG);
+    const distRounded = Math.round(dist);
+    gpsOk = dist <= RADIUS_M;
+
+    const dot = document.getElementById('gpsDot');
+    const txt = document.getElementById('gpsText');
+    const distEl = document.getElementById('gpsDist');
+
+    dot.className = 'gps-dot ' + (gpsOk ? 'ok' : 'err');
+    txt.textContent = gpsOk ? 'Lokasi terdeteksi di area sekolah' : 'Kamu di luar area sekolah';
+    distEl.textContent = distRounded + ' m';
+    updateButtons(new Date());
+  }, err => {
+    document.getElementById('gpsDot').className = 'gps-dot err';
+    document.getElementById('gpsText').textContent = 'Izin GPS ditolak — aktifkan lokasi';
+  }, { enableHighAccuracy: true, maximumAge: 10000 });
+}
+startGPS();
+
+// =====================
+// MODAL & ABSEN
+// =====================
+function triggerAbsen(type) {
+  const siswa = document.getElementById('siswaSelect').value;
+  if (!siswa) { showToast('Pilih nama dulu ya!', 'warn'); return; }
+  pendingType = type;
+  const now = new Date();
+  const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  const icon = type === 'masuk' ? '✅' : '🏠';
+  const label = type === 'masuk' ? 'Absen Masuk' : 'Absen Pulang';
+  document.getElementById('modalIcon').textContent = icon;
+  document.getElementById('modalTitle').textContent = label;
+  document.getElementById('modalSub').textContent = `${siswa} · ${timeStr} WIB`;
+  document.getElementById('modalConfirm').className = 'modal-confirm ' + (type === 'masuk' ? 'green' : 'blue');
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('show');
+  pendingType = null;
+}
+
+function confirmAbsen() {
+  const siswa = document.getElementById('siswaSelect').value;
+  const now = new Date();
+  const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  logs.push({ nama: siswa, type: pendingType, time: timeStr, ts: now.toISOString() });
+  saveLog();
+  closeModal();
+  renderLog();
+  updateButtons(now);
+  showToast(pendingType === 'masuk' ? `Absen masuk berhasil! ✅` : `Absen pulang berhasil! 🏠`, 'success');
+}
+
+// =====================
+// LOG
+// =====================
+function renderLog() {
+  const wrap = document.getElementById('logWrap');
+  if (logs.length === 0) {
+    wrap.innerHTML = '<div class="empty-log">Belum ada absensi hari ini</div>';
+    return;
+  }
+  wrap.innerHTML = [...logs].reverse().map(l => `
+    <div class="log-item">
+      <div>
+        <div class="log-name">${l.nama}</div>
+        <div class="log-type">${l.type === 'masuk' ? 'Absen Masuk' : 'Absen Pulang'}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span class="log-time">${l.time}</span>
+        <span class="log-badge ${l.type === 'masuk' ? 'badge-masuk' : 'badge-pulang'}">${l.type}</span>
+      </div>
+    </div>
+  `).join('');
+}
+renderLog();
+
+// =====================
+// TOAST
+// =====================
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.className = 'toast', 2800);
+}
+</script>
+</body>
+</html>
