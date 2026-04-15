@@ -561,10 +561,10 @@ async function confirmAbsen(){
       hari:HARI[d.getDay()]
     });
     closeModal();
-    await loadTodayLog();
-    onSiswaChange();
     showToast(pendingType==='masuk'?'Absen masuk berhasil! ✅':'Absen pulang berhasil! 🏠','success');
     loadDashboard();
+    await loadTodayLog();
+    onSiswaChange();
   } catch(e){
     console.error(e);
     showToast('Gagal menyimpan. Cek koneksi!','error');
@@ -578,9 +578,9 @@ async function loadTodayLog(){
   if(!window.dbReady) return;
   const {getDocs, query, where, orderBy} = window._fs;
   const today = new Date().toISOString().slice(0,10);
-  const q = query(window._col, where('tanggal','==',today), orderBy('timestamp','asc'));
+  const q = query(window._col, where('tanggal','==',today));
   const snap = await getDocs(q);
-  todayLogs = snap.docs.map(d=>d.data());
+  todayLogs = snap.docs.map(d=>d.data()).sort((a,b)=>a.waktu.localeCompare(b.waktu));
   renderTodayLog();
 }
 
