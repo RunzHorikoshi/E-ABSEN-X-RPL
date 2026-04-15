@@ -312,7 +312,7 @@
   <div class="window-row">
     <div class="window-card">
       <div class="window-label">Absen Masuk</div>
-      <div class="window-time">06:00 – 07:15</div>
+      <div class="window-time">06:00 – 10:00</div>
       <div class="window-status" id="winMasukStatus">—</div>
     </div>
     <div class="window-card">
@@ -348,7 +348,7 @@
     <button class="absen-btn masuk" id="btnMasuk" onclick="triggerAbsen('masuk')" disabled>
       <span class="btn-icon">✅</span>
       <span class="btn-label">Absen Masuk</span>
-      <span class="btn-sub">06:00 – 07:15</span>
+      <span class="btn-sub">06:00 – 10:00</span>
     </button>
     <button class="absen-btn pulang" id="btnPulang" onclick="triggerAbsen('pulang')" disabled>
       <span class="btn-icon">🏠</span>
@@ -561,7 +561,7 @@
     <div class="modal-icon">🔐</div>
     <div class="modal-title">Verifikasi Admin</div>
     <div class="modal-sub" id="pinModalSub">Masukkan PIN admin untuk melanjutkan</div>
-    <input type="password" class="pin-input" id="adminPinInput" maxlength="6" placeholder="......" oninput="checkPinInput()"/>
+    <input type="password" class="pin-input" id="adminPinInput" maxlength="6" placeholder="••••••" oninput="checkPinInput()"/>
     <button class="modal-confirm warn-btn" id="pinConfirmBtn" onclick="confirmAdminAction()" disabled>Konfirmasi</button>
     <button class="modal-cancel" onclick="closePinModal()">Batal</button>
   </div>
@@ -619,7 +619,7 @@ const LOGO_RPL_B64 = 'data:image/png;base64,/9j/4AAQSkZJRgABAQAASABIAAD/4QBMRXhp
 ['logoRpl','logoRpl2','logoRpl3'].forEach(id=>{ const el=document.getElementById(id); if(el) el.src=LOGO_RPL_B64; });
 
 // ===================== CONFIG =====================
-const SCHOOL_LAT = 0.5488, SCHOOL_LNG = 109.3815, RADIUS_M = 1000000;
+const SCHOOL_LAT = 0.5488, SCHOOL_LNG = 109.3815, RADIUS_M = 200000;
 const ADMIN_PIN = 'KOCAKK'; // Ganti PIN admin di sini
 const SISWA = [
   "ALFIANA TESI","APIN","BENI FEBRIAN","BODON","BRIGIDI DIVO","DERLIN KRISTI","DOSO","ELIZA BUDIYATI","FITRAH AGUNG REZEKI",
@@ -628,7 +628,7 @@ const SISWA = [
 ];
 const HARI = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
 const BULAN = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
-const JADWAL_PULANG = {'1':'14:10-14:20','2':'14:10-14:20','3':'14:10-14:20','4':'14:10-14:20','5':'11:55-12:20'};
+const JADWAL_PULANG = {'1':'14:05-18:20','2':'14:05-18:20','3':'14:05-18:20','4':'14:05-18:20','5':'11:55-12:20'};
 
 let gpsOk = false, pendingType = null, selectedStatus = 'hadir';
 let currentFilter = 'hari', currentRekapTab = 'bulan';
@@ -660,7 +660,7 @@ function updateClock(){
   document.getElementById('clock').textContent = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
   document.getElementById('clockDate').textContent = `${HARI[d.getDay()]}, ${d.getDate()} ${BULAN[d.getMonth()]} ${d.getFullYear()}`;
   updateWindowStatus(d); updateButtons(d);
-  // Cek alpa otomatis setelah jam 14:10
+  // Cek alpa otomatis setelah jam 10:00
   autoAlphaCheck(d);
 }
 setInterval(updateClock, 1000); updateClock();
@@ -673,7 +673,7 @@ function updateWindowStatus(d){
   const day = d.getDay(), valid = day>=1&&day<=5;
   const wm = document.getElementById('winMasukStatus');
   if(!valid){ wm.textContent='Libur'; wm.className='window-status closed'; }
-  else if(inWindow('06:00','07:15',d)){ wm.textContent='Sedang buka'; wm.className='window-status open'; }
+  else if(inWindow('06:00','10:00',d)){ wm.textContent='Sedang buka'; wm.className='window-status open'; }
   else { wm.textContent=nowMin(d)<parseMin('06:00')?'Belum buka':'Sudah tutup'; wm.className='window-status closed'; }
 
   const jp = JADWAL_PULANG[String(day)];
@@ -696,8 +696,8 @@ async function autoAlphaCheck(d){
   if(day < 1 || day > 5) return;       // skip Sabtu-Minggu
   if(isHariLibur) return;               // skip hari libur
   if(!autoAlphaEnabled) return;         // skip kalau dimatiin admin
-  // Hanya trigger setelah jam 14:10
-  if(nowMin(d) < parseMin('15:10')) { autoAlphaTriggered = false; return; }
+  // Hanya trigger setelah jam 10:00
+  if(nowMin(d) < parseMin('10:00')) { autoAlphaTriggered = false; return; }
   if(autoAlphaTriggered) return;
   autoAlphaTriggered = true;
 
@@ -717,7 +717,7 @@ async function autoAlphaCheck(d){
       try {
         await addDoc(window._col,{
           nama, tipe:'masuk', status:'alpha', keterangan:'Otomatis — tidak hadir',
-          waktu:'14:10', tanggal:today,
+          waktu:'10:00', tanggal:today,
           timestamp:Timestamp.fromDate(new Date(d.getFullYear(),d.getMonth(),d.getDate(),10,0)),
           hari:HARI[day], auto:true
         });
@@ -777,7 +777,7 @@ function updateButtons(d){
   }
 
   if(sudahM){ bm.disabled=true; bm.className='absen-btn masuk done'; bm.querySelector('.btn-label').textContent='Sudah Absen ✓'; }
-  else { bm.disabled=!(valid&&gpsOk&&inWindow('06:00','07:15',d)&&!!nama); bm.className='absen-btn masuk'; bm.querySelector('.btn-label').textContent='Absen Masuk'; }
+  else { bm.disabled=!(valid&&gpsOk&&inWindow('06:00','10:00',d)&&!!nama); bm.className='absen-btn masuk'; bm.querySelector('.btn-label').textContent='Absen Masuk'; }
 
   if(sudahP){ bp.disabled=true; bp.className='absen-btn pulang done-pulang'; bp.querySelector('.btn-label').textContent='Sudah Absen ✓'; }
   else {
