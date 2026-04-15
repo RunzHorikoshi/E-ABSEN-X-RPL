@@ -660,7 +660,7 @@ function updateClock(){
   document.getElementById('clock').textContent = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
   document.getElementById('clockDate').textContent = `${HARI[d.getDay()]}, ${d.getDate()} ${BULAN[d.getMonth()]} ${d.getFullYear()}`;
   updateWindowStatus(d); updateButtons(d);
-  // Cek alpa otomatis setelah jam 14:10
+  // Cek alpa otomatis setelah jam 13:10
   autoAlphaCheck(d);
 }
 setInterval(updateClock, 1000); updateClock();
@@ -696,7 +696,7 @@ async function autoAlphaCheck(d){
   if(day < 1 || day > 5) return;       // skip Sabtu-Minggu
   if(isHariLibur) return;               // skip hari libur
   if(!autoAlphaEnabled) return;         // skip kalau dimatiin admin
-  // Hanya trigger setelah jam 14:10
+  // Hanya trigger setelah jam 13:10
   if(nowMin(d) < parseMin('13:10')) { autoAlphaTriggered = false; return; }
   if(autoAlphaTriggered) return;
   autoAlphaTriggered = true;
