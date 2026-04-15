@@ -673,7 +673,7 @@ function updateWindowStatus(d){
   const day = d.getDay(), valid = day>=1&&day<=5;
   const wm = document.getElementById('winMasukStatus');
   if(!valid){ wm.textContent='Libur'; wm.className='window-status closed'; }
-  else if(inWindow('06:00','10:00',d)){ wm.textContent='Sedang buka'; wm.className='window-status open'; }
+  else if(inWindow('06:00','18:00',d)){ wm.textContent='Sedang buka'; wm.className='window-status open'; }
   else { wm.textContent=nowMin(d)<parseMin('06:00')?'Belum buka':'Sudah tutup'; wm.className='window-status closed'; }
 
   const jp = JADWAL_PULANG[String(day)];
