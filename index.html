@@ -253,6 +253,23 @@
   .tabs-inner { display: flex; gap: 6px; margin-bottom: 1rem; }
   .tab-inner { padding: 6px 14px; border-radius: 8px; border: 1px solid var(--border2); background: var(--surface); color: var(--muted); font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif; transition: all 0.15s; }
   .tab-inner.active { background: var(--surface2); color: var(--text); border-color: var(--border2); }
+
+  /* KONTROL HARI INI */
+  .kontrol-section { background: var(--surface); border: 1px solid var(--purple-border); border-radius: 12px; padding: 14px; margin-bottom: 1rem; }
+  .kontrol-title { font-size: 12px; font-weight: 700; color: var(--purple); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+  .kontrol-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .kontrol-btn { padding: 10px; border-radius: 10px; border: 1px solid var(--border2); font-size: 11px; font-weight: 600; cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif; transition: all 0.15s; background: var(--surface2); color: var(--muted); text-align:center; }
+  .kontrol-btn.active-off { border-color: var(--red-border); color: var(--red); background: var(--red-bg); }
+  .kontrol-btn.active-libur { border-color: var(--green-border); color: var(--green); background: var(--green-bg); }
+  .libur-banner { background: var(--green-bg); border: 1px solid var(--green-border); color: var(--green); border-radius: 10px; padding: 8px 12px; font-size: 12px; font-weight: 600; text-align: center; margin-bottom: 1rem; display: none; }
+  .libur-banner.show { display: block; }
+
+  /* LAPOR PANCUNG */
+  .lapor-section { background: var(--surface); border: 1px solid var(--orange-border); border-radius: 12px; padding: 14px; margin-bottom: 1rem; }
+  .lapor-title { font-size: 12px; font-weight: 700; color: var(--orange); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+  .lapor-counter { font-size: 11px; color: var(--muted); margin-top: 6px; text-align: center; font-family: 'DM Mono', monospace; }
+  .lapor-btn { width: 100%; padding: 11px; border-radius: 10px; border: 1px solid var(--orange-border); background: var(--surface2); color: var(--orange); font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif; transition: all 0.15s; margin-top: 8px; }
+  .lapor-btn:hover { background: var(--orange-bg); }
 </style>
 </head>
 <body>
@@ -283,6 +300,8 @@
       <div class="school-sub">Absensi Digital · Kelas X RPL</div>
     </div>
   </div>
+
+  <div class="libur-banner" id="liburBanner">🎉 Hari Ini Sedang Libur</div>
 
   <div class="clock-card">
     <div class="clock-time" id="clock">00:00:00</div>
@@ -345,6 +364,23 @@
     </button>
   </div>
 
+  <!-- Lapor Pancung -->
+  <div class="lapor-section">
+    <div class="lapor-title">✂️ Lapor Pancung <span class="admin-badge">LAPOR</span></div>
+    <div class="select-wrap" style="margin-bottom:8px;">
+      <select class="admin-select" id="laporPelaporSelect">
+        <option value="">-- Nama kamu (pelapor) --</option>
+      </select>
+    </div>
+    <div class="select-wrap" style="margin-bottom:0;">
+      <select class="admin-select" id="laporTargetSelect">
+        <option value="">-- Nama siswa yang pancung --</option>
+      </select>
+    </div>
+    <button class="lapor-btn" onclick="submitLaporan()">✂️ Kirim Laporan Pancung</button>
+    <div class="lapor-counter" id="laporCounter"></div>
+  </div>
+
   <div class="section-label">Log absensi hari ini</div>
   <div id="logWrap"><div class="empty-state">Belum ada absensi hari ini</div></div>
 </div>
@@ -394,6 +430,15 @@
     </div>
     <div style="margin-top:8px;">
       <button class="admin-action-btn alpa-all" onclick="adminAlpaAll()">⚠️ Alpha Otomatis Semua yang Belum Absen</button>
+    </div>
+  </div>
+
+  <!-- KONTROL HARI INI -->
+  <div class="kontrol-section">
+    <div class="kontrol-title">⚙️ Kontrol Hari Ini <span class="admin-badge">ADMIN ONLY</span></div>
+    <div class="kontrol-row">
+      <button class="kontrol-btn" id="btnToggleAutoAlpha" onclick="triggerKontrol('toggle-autoalpha')">🔄 Auto Alpha: ON</button>
+      <button class="kontrol-btn" id="btnToggleLibur" onclick="triggerKontrol('toggle-libur')">📅 Tandai Libur</button>
     </div>
   </div>
 
@@ -561,6 +606,8 @@ window.dbReady = true;
 loadTodayLog();
 loadDashboard();
 loadRekap();
+updateKontrolUI();
+loadLaporCounter();
 </script>
 
 <script>
@@ -588,13 +635,17 @@ let currentFilter = 'hari', currentRekapTab = 'bulan';
 let todayLogs = [];
 let pendingAdminAction = null, pendingAdminSiswa = null;
 let izinType = 'izin';
+let autoAlphaEnabled = true;  // toggle auto alpha
+let isHariLibur = false;       // toggle hari libur
 
 // ===================== INIT SISWA =====================
 const sel = document.getElementById('siswaSelect');
 const adminSel = document.getElementById('adminSiswaSelect');
 const izinSel = document.getElementById('izinSiswaSelect');
+const laporPelaporSel = document.getElementById('laporPelaporSelect');
+const laporTargetSel = document.getElementById('laporTargetSelect');
 SISWA.forEach(n => {
-  [sel, adminSel, izinSel].forEach(s => {
+  [sel, adminSel, izinSel, laporPelaporSel, laporTargetSel].forEach(s => {
     const o = document.createElement('option'); o.value = n; o.textContent = n; s.appendChild(o);
   });
 });
@@ -642,7 +693,9 @@ let autoAlphaTriggered = false;
 async function autoAlphaCheck(d){
   if(!window.dbReady) return;
   const day = d.getDay();
-  if(day < 1 || day > 5) return;
+  if(day < 1 || day > 5) return;       // skip Sabtu-Minggu
+  if(isHariLibur) return;               // skip hari libur
+  if(!autoAlphaEnabled) return;         // skip kalau dimatiin admin
   // Hanya trigger setelah jam 10:00
   if(nowMin(d) < parseMin('10:00')) { autoAlphaTriggered = false; return; }
   if(autoAlphaTriggered) return;
@@ -716,6 +769,12 @@ function updateButtons(d){
   const sudahM = nama&&todayLogs.some(l=>l.nama===nama&&l.tipe==='masuk');
   const sudahP = nama&&todayLogs.some(l=>l.nama===nama&&l.tipe==='pulang');
   const bm=document.getElementById('btnMasuk'), bp=document.getElementById('btnPulang');
+
+  if(isHariLibur){
+    bm.disabled=true; bm.className='absen-btn masuk'; bm.querySelector('.btn-label').textContent='🎉 Sedang Libur';
+    bp.disabled=true; bp.className='absen-btn pulang'; bp.querySelector('.btn-label').textContent='🎉 Sedang Libur';
+    return;
+  }
 
   if(sudahM){ bm.disabled=true; bm.className='absen-btn masuk done'; bm.querySelector('.btn-label').textContent='Sudah Absen ✓'; }
   else { bm.disabled=!(valid&&gpsOk&&inWindow('06:00','10:00',d)&&!!nama); bm.className='absen-btn masuk'; bm.querySelector('.btn-label').textContent='Absen Masuk'; }
@@ -858,13 +917,33 @@ function checkPinInput(){
 async function confirmAdminAction(){
   const pin = document.getElementById('adminPinInput').value;
   if(pin !== ADMIN_PIN){ showToast('PIN salah!','error'); return; }
+
+  // Simpan action & siswa sebelum closePinModal() menghapusnya
+  const action = pendingAdminAction;
+  const siswa = pendingAdminSiswa;
   closePinModal();
 
-  if(pendingAdminAction === 'absen-confirm'){
-    // Lanjutkan absen dengan status admin (alpha/pancung)
+  if(action === 'absen-confirm'){
     document.getElementById('modalOverlay').classList.add('show');
     const nama = document.getElementById('siswaSelect').value;
     await doAbsen(nama);
+    return;
+  }
+
+  if(action === 'toggle-autoalpha'){
+    autoAlphaEnabled = !autoAlphaEnabled;
+    autoAlphaTriggered = false; // reset agar bisa re-trigger kalau dinyalakan lagi
+    updateKontrolUI();
+    showToast(`Auto Alpha ${autoAlphaEnabled ? 'diaktifkan ✅' : 'dinonaktifkan ❌'}`, autoAlphaEnabled ? 'success' : 'warn');
+    return;
+  }
+
+  if(action === 'toggle-libur'){
+    isHariLibur = !isHariLibur;
+    if(isHariLibur){ autoAlphaTriggered = true; } // matikan auto alpha saat libur
+    updateKontrolUI();
+    updateButtons(new Date());
+    showToast(isHariLibur ? '🎉 Hari ini ditandai Libur!' : 'Hari ini kembali aktif', isHariLibur ? 'success' : 'warn');
     return;
   }
 
@@ -872,19 +951,19 @@ async function confirmAdminAction(){
   const d = new Date(), today = d.toISOString().slice(0,10);
   const t = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 
-  if(pendingAdminAction === 'pancung' || pendingAdminAction === 'alpha'){
-    const nama = pendingAdminSiswa;
+  if(action === 'pancung' || action === 'alpha'){
+    const nama = siswa;
     const cekQ = query(window._col, where('nama','==',nama), where('tanggal','==',today), where('tipe','==','masuk'));
     const cekSnap = await getDocs(cekQ);
     if(!cekSnap.empty){ showToast(`${nama} sudah ada catatan absen hari ini!`,'warn'); return; }
     try {
-      await addDoc(window._col,{ nama, tipe:'masuk', status:pendingAdminAction, keterangan:`Admin — ${pendingAdminAction}`, waktu:t, tanggal:today, timestamp:Timestamp.fromDate(d), hari:HARI[d.getDay()], byAdmin:true });
-      showToast(`${pendingAdminAction.toUpperCase()} berhasil dicatat untuk ${nama}`,'success');
+      await addDoc(window._col,{ nama, tipe:'masuk', status:action, keterangan:`Admin — ${action}`, waktu:t, tanggal:today, timestamp:Timestamp.fromDate(d), hari:HARI[d.getDay()], byAdmin:true });
+      showToast(`${action.toUpperCase()} berhasil dicatat untuk ${nama}`,'success');
       await loadTodayLog(); loadDashboard();
     } catch(e){ showToast('Gagal menyimpan','error'); }
   }
 
-  if(pendingAdminAction === 'alpha-all'){
+  if(action === 'alpha-all'){
     const snap = await getDocs(query(window._col, where('tanggal','==',today), where('tipe','==','masuk')));
     const sudahAbsen = new Set(snap.docs.map(doc=>doc.data().nama));
     let count = 0;
@@ -899,6 +978,114 @@ async function confirmAdminAction(){
     showToast(`${count} siswa dicatat alpha!`,'success');
     await loadTodayLog(); loadDashboard();
   }
+}
+
+// ===================== KONTROL HARI INI =====================
+function triggerKontrol(action){
+  pendingAdminAction = action;
+  pendingAdminSiswa = null;
+  const desc = action === 'toggle-autoalpha'
+    ? (autoAlphaEnabled ? 'mematikan Auto Alpha' : 'mengaktifkan Auto Alpha')
+    : (isHariLibur ? 'menonaktifkan mode Libur' : 'menandai hari ini sebagai Libur');
+  showPinModal(action, `untuk ${desc}`);
+}
+
+function updateKontrolUI(){
+  const btnAA = document.getElementById('btnToggleAutoAlpha');
+  const btnLib = document.getElementById('btnToggleLibur');
+  const banner = document.getElementById('liburBanner');
+  if(btnAA){
+    btnAA.textContent = `🔄 Auto Alpha: ${autoAlphaEnabled ? 'ON' : 'OFF'}`;
+    btnAA.className = 'kontrol-btn' + (!autoAlphaEnabled ? ' active-off' : '');
+  }
+  if(btnLib){
+    btnLib.textContent = isHariLibur ? '✅ Sedang Libur' : '📅 Tandai Libur';
+    btnLib.className = 'kontrol-btn' + (isHariLibur ? ' active-libur' : '');
+  }
+  if(banner){ banner.classList.toggle('show', isHariLibur); }
+}
+
+// ===================== LAPOR PANCUNG =====================
+async function submitLaporan(){
+  if(!window.dbReady){ showToast('Database belum siap','error'); return; }
+  const pelapor = document.getElementById('laporPelaporSelect').value;
+  const target = document.getElementById('laporTargetSelect').value;
+  if(!pelapor){ showToast('Pilih nama kamu dulu!','warn'); return; }
+  if(!target){ showToast('Pilih nama yang dilaporin!','warn'); return; }
+  if(pelapor === target){ showToast('Ga bisa lapor diri sendiri!','warn'); return; }
+
+  const {addDoc, getDocs, query, where, Timestamp} = window._fs;
+  const today = new Date().toISOString().slice(0,10);
+
+  // Cek sudah lapor belum hari ini
+  const cekSnap = await getDocs(query(window._col,
+    where('tipe','==','laporan-pancung'),
+    where('tanggal','==',today),
+    where('pelapor','==',pelapor),
+    where('target','==',target)
+  ));
+  if(!cekSnap.empty){ showToast('Kamu sudah pernah lapor orang ini hari ini!','warn'); return; }
+
+  const btn = document.getElementById('laporPelaporSelect').parentElement.nextElementSibling.nextElementSibling.nextElementSibling;
+  try {
+    await addDoc(window._col,{
+      tipe:'laporan-pancung', pelapor, target, tanggal:today,
+      timestamp:Timestamp.fromDate(new Date())
+    });
+    showToast(`Laporan terkirim! ✂️`,'success');
+    document.getElementById('laporPelaporSelect').value='';
+    document.getElementById('laporTargetSelect').value='';
+    await checkLaporanPancung(target, today);
+    loadLaporCounter();
+  } catch(e){ showToast('Gagal kirim laporan','error'); }
+}
+
+async function checkLaporanPancung(target, today){
+  if(!window.dbReady) return;
+  const {addDoc, getDocs, query, where, Timestamp} = window._fs;
+
+  // Hitung total laporan untuk target hari ini
+  const snap = await getDocs(query(window._col,
+    where('tipe','==','laporan-pancung'),
+    where('tanggal','==',today),
+    where('target','==',target)
+  ));
+  if(snap.docs.length < 2) return; // belum cukup
+
+  // Cek sudah ada catatan absen/pancung hari ini
+  const cekAbsen = await getDocs(query(window._col,
+    where('nama','==',target),
+    where('tanggal','==',today),
+    where('tipe','==','masuk')
+  ));
+  if(!cekAbsen.empty) return; // sudah ada catatan, skip
+
+  const d = new Date();
+  const t = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  try {
+    await addDoc(window._col,{
+      nama:target, tipe:'masuk', status:'pancung',
+      keterangan:`Auto — ${snap.docs.length} laporan pancung`,
+      waktu:t, tanggal:today,
+      timestamp:Timestamp.fromDate(d),
+      hari:HARI[d.getDay()], autoLaporan:true
+    });
+    showToast(`✂️ ${target} otomatis dicatat PANCUNG (${snap.docs.length} laporan)!`,'warn');
+    await loadTodayLog(); loadDashboard();
+  } catch(e){ console.error('auto pancung error',e); }
+}
+
+async function loadLaporCounter(){
+  if(!window.dbReady) return;
+  const {getDocs, query, where} = window._fs;
+  const today = new Date().toISOString().slice(0,10);
+  const snap = await getDocs(query(window._col,
+    where('tipe','==','laporan-pancung'),
+    where('tanggal','==',today)
+  ));
+  const count = snap.docs.length;
+  const el = document.getElementById('laporCounter');
+  if(el) el.textContent = count > 0 ? `${count} laporan masuk hari ini` : '';
 }
 
 // ===================== IZIN FORM =====================
