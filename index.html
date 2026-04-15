@@ -312,7 +312,7 @@
   <div class="window-row">
     <div class="window-card">
       <div class="window-label">Absen Masuk</div>
-      <div class="window-time">06:00 – 10:00</div>
+      <div class="window-time">06:00 – 07:15</div>
       <div class="window-status" id="winMasukStatus">—</div>
     </div>
     <div class="window-card">
@@ -348,7 +348,7 @@
     <button class="absen-btn masuk" id="btnMasuk" onclick="triggerAbsen('masuk')" disabled>
       <span class="btn-icon">✅</span>
       <span class="btn-label">Absen Masuk</span>
-      <span class="btn-sub">06:00 – 10:00</span>
+      <span class="btn-sub">06:00 – 07:15</span>
     </button>
     <button class="absen-btn pulang" id="btnPulang" onclick="triggerAbsen('pulang')" disabled>
       <span class="btn-icon">🏠</span>
@@ -619,7 +619,7 @@ const LOGO_RPL_B64 = 'data:image/png;base64,/9j/4AAQSkZJRgABAQAASABIAAD/4QBMRXhp
 ['logoRpl','logoRpl2','logoRpl3'].forEach(id=>{ const el=document.getElementById(id); if(el) el.src=LOGO_RPL_B64; });
 
 // ===================== CONFIG =====================
-const SCHOOL_LAT = 0.5488, SCHOOL_LNG = 109.3815, RADIUS_M = 200000;
+const SCHOOL_LAT = 0.5488, SCHOOL_LNG = 109.3815, RADIUS_M = 375;
 const ADMIN_PIN = 'KOCAKK'; // Ganti PIN admin di sini
 const SISWA = [
   "ALFIANA TESI","APIN","BENI FEBRIAN","BODON","BRIGIDI DIVO","DERLIN KRISTI","DOSO","ELIZA BUDIYATI","FITRAH AGUNG REZEKI",
@@ -673,7 +673,7 @@ function updateWindowStatus(d){
   const day = d.getDay(), valid = day>=1&&day<=5;
   const wm = document.getElementById('winMasukStatus');
   if(!valid){ wm.textContent='Libur'; wm.className='window-status closed'; }
-  else if(inWindow('06:00','18:00',d)){ wm.textContent='Sedang buka'; wm.className='window-status open'; }
+  else if(inWindow('06:00','07:15',d)){ wm.textContent='Sedang buka'; wm.className='window-status open'; }
   else { wm.textContent=nowMin(d)<parseMin('06:00')?'Belum buka':'Sudah tutup'; wm.className='window-status closed'; }
 
   const jp = JADWAL_PULANG[String(day)];
@@ -777,7 +777,7 @@ function updateButtons(d){
   }
 
   if(sudahM){ bm.disabled=true; bm.className='absen-btn masuk done'; bm.querySelector('.btn-label').textContent='Sudah Absen ✓'; }
-  else { bm.disabled=!(valid&&gpsOk&&inWindow('06:00','10:00',d)&&!!nama); bm.className='absen-btn masuk'; bm.querySelector('.btn-label').textContent='Absen Masuk'; }
+  else { bm.disabled=!(valid&&gpsOk&&inWindow('06:00','07:15',d)&&!!nama); bm.className='absen-btn masuk'; bm.querySelector('.btn-label').textContent='Absen Masuk'; }
 
   if(sudahP){ bp.disabled=true; bp.className='absen-btn pulang done-pulang'; bp.querySelector('.btn-label').textContent='Sudah Absen ✓'; }
   else {
