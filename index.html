@@ -561,7 +561,7 @@
     <div class="modal-icon">🔐</div>
     <div class="modal-title">Verifikasi Admin</div>
     <div class="modal-sub" id="pinModalSub">Masukkan PIN admin untuk melanjutkan</div>
-    <input type="password" class="pin-input" id="adminPinInput" maxlength="6" placeholder="KOCAKK" oninput="checkPinInput()"/>
+    <input type="password" class="pin-input" id="adminPinInput" maxlength="6" placeholder="......" oninput="checkPinInput()"/>
     <button class="modal-confirm warn-btn" id="pinConfirmBtn" onclick="confirmAdminAction()" disabled>Konfirmasi</button>
     <button class="modal-cancel" onclick="closePinModal()">Batal</button>
   </div>
@@ -619,8 +619,8 @@ const LOGO_RPL_B64 = 'data:image/png;base64,/9j/4AAQSkZJRgABAQAASABIAAD/4QBMRXhp
 ['logoRpl','logoRpl2','logoRpl3'].forEach(id=>{ const el=document.getElementById(id); if(el) el.src=LOGO_RPL_B64; });
 
 // ===================== CONFIG =====================
-const SCHOOL_LAT = 0.5488, SCHOOL_LNG = 109.3815, RADIUS_M = 375;
-const ADMIN_PIN = '123456'; // Ganti PIN admin di sini
+const SCHOOL_LAT = 0.5488, SCHOOL_LNG = 109.3815, RADIUS_M = 1000000;
+const ADMIN_PIN = 'KOCAKK'; // Ganti PIN admin di sini
 const SISWA = [
   "ALFIANA TESI","APIN","BENI FEBRIAN","BODON","BRIGIDI DIVO","DERLIN KRISTI","DOSO","ELIZA BUDIYATI","FITRAH AGUNG REZEKI",
   "FRISILA ELLA","JULIA SINTA BELA","JULIANTI DUPA","KALIANUS OWEN","KLARA JESIKA BERLI","LISKA","MARPEL","MEISYA","MITA",
@@ -697,7 +697,7 @@ async function autoAlphaCheck(d){
   if(isHariLibur) return;               // skip hari libur
   if(!autoAlphaEnabled) return;         // skip kalau dimatiin admin
   // Hanya trigger setelah jam 13:10
-  if(nowMin(d) < parseMin('13:10')) { autoAlphaTriggered = false; return; }
+  if(nowMin(d) < parseMin('15:10')) { autoAlphaTriggered = false; return; }
   if(autoAlphaTriggered) return;
   autoAlphaTriggered = true;
 
