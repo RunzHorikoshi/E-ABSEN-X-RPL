@@ -696,8 +696,8 @@ async function autoAlphaCheck(d){
   if(day < 1 || day > 5) return;       // skip Sabtu-Minggu
   if(isHariLibur) return;               // skip hari libur
   if(!autoAlphaEnabled) return;         // skip kalau dimatiin admin
-  // Hanya trigger setelah jam 10:00
-  if(nowMin(d) < parseMin('10:00')) { autoAlphaTriggered = false; return; }
+  // Hanya trigger setelah jam 14:15
+  if(nowMin(d) < parseMin('14:15')) { autoAlphaTriggered = false; return; }
   if(autoAlphaTriggered) return;
   autoAlphaTriggered = true;
 
@@ -717,7 +717,7 @@ async function autoAlphaCheck(d){
       try {
         await addDoc(window._col,{
           nama, tipe:'masuk', status:'alpha', keterangan:'Otomatis — tidak hadir',
-          waktu:'10:00', tanggal:today,
+          waktu:'14:15', tanggal:today,
           timestamp:Timestamp.fromDate(new Date(d.getFullYear(),d.getMonth(),d.getDate(),10,0)),
           hari:HARI[day], auto:true
         });
@@ -777,7 +777,7 @@ function updateButtons(d){
   }
 
   if(sudahM){ bm.disabled=true; bm.className='absen-btn masuk done'; bm.querySelector('.btn-label').textContent='Sudah Absen ✓'; }
-  else { bm.disabled=!(valid&&gpsOk&&inWindow('06:00','10:00',d)&&!!nama); bm.className='absen-btn masuk'; bm.querySelector('.btn-label').textContent='Absen Masuk'; }
+  else { bm.disabled=!(valid&&gpsOk&&inWindow('06:00','07:15',d)&&!!nama); bm.className='absen-btn masuk'; bm.querySelector('.btn-label').textContent='Absen Masuk'; }
 
   if(sudahP){ bp.disabled=true; bp.className='absen-btn pulang done-pulang'; bp.querySelector('.btn-label').textContent='Sudah Absen ✓'; }
   else {
