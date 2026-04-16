@@ -312,7 +312,7 @@
   <div class="window-row">
     <div class="window-card">
       <div class="window-label">Absen Masuk</div>
-      <div class="window-time">06:00 – 07:15</div>
+      <div class="window-time">06:00 – 07:40</div>
       <div class="window-status" id="winMasukStatus">—</div>
     </div>
     <div class="window-card">
@@ -348,7 +348,7 @@
     <button class="absen-btn masuk" id="btnMasuk" onclick="triggerAbsen('masuk')" disabled>
       <span class="btn-icon">✅</span>
       <span class="btn-label">Absen Masuk</span>
-      <span class="btn-sub">06:00 – 07:15</span>
+      <span class="btn-sub">06:00 – 07:40</span>
     </button>
     <button class="absen-btn pulang" id="btnPulang" onclick="triggerAbsen('pulang')" disabled>
       <span class="btn-icon">🏠</span>
@@ -430,6 +430,9 @@
     </div>
     <div style="margin-top:8px;">
       <button class="admin-action-btn alpa-all" onclick="adminAlpaAll()">⚠️ Alpha Otomatis Semua yang Belum Absen</button>
+    </div>
+    <div style="margin-top:8px;">
+      <button class="admin-action-btn" style="border-color:var(--red-border);color:var(--red);grid-column:1/-1;" onclick="adminHapusRecord()">🗑️ Hapus Record Siswa Hari Ini</button>
     </div>
   </div>
 
@@ -583,7 +586,7 @@
 <!-- FIREBASE -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, query, where, orderBy, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, query, where, orderBy, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAuFXi9JAphxjQl2kEGYjf9aSXJlo25Xj8",
@@ -599,7 +602,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 window._db = db;
 window._col = collection(db, "absensi");
-window._fs = { collection, addDoc, getDocs, query, where, orderBy, Timestamp };
+window._fs = { collection, addDoc, getDocs, deleteDoc, query, where, orderBy, Timestamp };
 
 document.getElementById('loadingOverlay').style.display = 'none';
 window.dbReady = true;
@@ -628,7 +631,7 @@ const SISWA = [
 ];
 const HARI = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
 const BULAN = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
-const JADWAL_PULANG = {'1':'14:10-14:30','2':'14:10-14:30','3':'14:10-14:30','4':'14:10-14:30','5':'11:55-12:20'};
+const JADWAL_PULANG = {'1':'13:10-13:30','2':'13:10-13:30','3':'13:10-13:30','4':'13:10-13:30','5':'11:55-12:20'};
 
 let gpsOk = false, pendingType = null, selectedStatus = 'hadir';
 let currentFilter = 'hari', currentRekapTab = 'bulan';
@@ -673,7 +676,7 @@ function updateWindowStatus(d){
   const day = d.getDay(), valid = day>=1&&day<=5;
   const wm = document.getElementById('winMasukStatus');
   if(!valid){ wm.textContent='Libur'; wm.className='window-status closed'; }
-  else if(inWindow('06:00','07:15',d)){ wm.textContent='Sedang buka'; wm.className='window-status open'; }
+  else if(inWindow('06:00','07:40',d)){ wm.textContent='Sedang buka'; wm.className='window-status open'; }
   else { wm.textContent=nowMin(d)<parseMin('06:00')?'Belum buka':'Sudah tutup'; wm.className='window-status closed'; }
 
   const jp = JADWAL_PULANG[String(day)];
@@ -689,7 +692,9 @@ function updateWindowStatus(d){
 }
 
 // ===================== ALPA OTOMATIS =====================
-let autoAlphaTriggered = false;
+// Simpan tanggal terakhir auto alpha dijalankan agar tidak re-trigger di hari yang sama
+let autoAlphaLastDate = '';
+
 async function autoAlphaCheck(d){
   if(!window.dbReady) return;
   const day = d.getDay();
@@ -697,12 +702,14 @@ async function autoAlphaCheck(d){
   if(isHariLibur) return;               // skip hari libur
   if(!autoAlphaEnabled) return;         // skip kalau dimatiin admin
   // Hanya trigger setelah jam 10:00
-  if(nowMin(d) < parseMin('10:00')) { autoAlphaTriggered = false; return; }
-  if(autoAlphaTriggered) return;
-  autoAlphaTriggered = true;
+  if(nowMin(d) < parseMin('10:00')) return;
+
+  const today = d.toISOString().slice(0,10);
+  // Sudah dijalankan hari ini? skip
+  if(autoAlphaLastDate === today) return;
+  autoAlphaLastDate = today;
 
   const {addDoc, getDocs, query, where, Timestamp} = window._fs;
-  const today = d.toISOString().slice(0,10);
   const snap = await getDocs(query(window._col, where('tanggal','==',today), where('tipe','==','masuk')));
   const sudahAbsen = new Set(snap.docs.map(doc=>doc.data().nama));
 
@@ -777,7 +784,7 @@ function updateButtons(d){
   }
 
   if(sudahM){ bm.disabled=true; bm.className='absen-btn masuk done'; bm.querySelector('.btn-label').textContent='Sudah Absen ✓'; }
-  else { bm.disabled=!(valid&&gpsOk&&inWindow('06:00','07:15',d)&&!!nama); bm.className='absen-btn masuk'; bm.querySelector('.btn-label').textContent='Absen Masuk'; }
+  else { bm.disabled=!(valid&&gpsOk&&inWindow('06:00','07:40',d)&&!!nama); bm.className='absen-btn masuk'; bm.querySelector('.btn-label').textContent='Absen Masuk'; }
 
   if(sudahP){ bp.disabled=true; bp.className='absen-btn pulang done-pulang'; bp.querySelector('.btn-label').textContent='Sudah Absen ✓'; }
   else {
@@ -932,7 +939,7 @@ async function confirmAdminAction(){
 
   if(action === 'toggle-autoalpha'){
     autoAlphaEnabled = !autoAlphaEnabled;
-    autoAlphaTriggered = false; // reset agar bisa re-trigger kalau dinyalakan lagi
+    autoAlphaLastDate = ''; // reset agar bisa re-trigger kalau dinyalakan lagi
     updateKontrolUI();
     showToast(`Auto Alpha ${autoAlphaEnabled ? 'diaktifkan ✅' : 'dinonaktifkan ❌'}`, autoAlphaEnabled ? 'success' : 'warn');
     return;
@@ -940,7 +947,6 @@ async function confirmAdminAction(){
 
   if(action === 'toggle-libur'){
     isHariLibur = !isHariLibur;
-    if(isHariLibur){ autoAlphaTriggered = true; } // matikan auto alpha saat libur
     updateKontrolUI();
     updateButtons(new Date());
     showToast(isHariLibur ? '🎉 Hari ini ditandai Libur!' : 'Hari ini kembali aktif', isHariLibur ? 'success' : 'warn');
@@ -978,6 +984,38 @@ async function confirmAdminAction(){
     showToast(`${count} siswa dicatat alpha!`,'success');
     await loadTodayLog(); loadDashboard();
   }
+
+  if(action === 'hapus-record'){
+    const nama = siswa;
+    const {deleteDoc, getDocs: gd, query: q, where: w} = window._fs;
+    const {getDocs: getDocs2, deleteDoc: del} = window._fs;
+    try {
+      // Hapus semua record (masuk & pulang) siswa ini hari ini
+      const snapMasuk = await getDocs(query(window._col, where('nama','==',nama), where('tanggal','==',today)));
+      let deleted = 0;
+      for(const docSnap of snapMasuk.docs){
+        if(docSnap.data().tipe === 'masuk' || docSnap.data().tipe === 'pulang'){
+          await deleteDoc(docSnap.ref);
+          deleted++;
+        }
+      }
+      showToast(`${deleted} record ${nama} hari ini berhasil dihapus!`,'success');
+      await loadTodayLog(); loadDashboard();
+    } catch(e){ console.error(e); showToast('Gagal hapus record','error'); }
+  }
+}
+
+function adminHapusRecord(){
+  const nama = document.getElementById('adminSiswaSelect').value;
+  if(!nama){ showToast('Pilih siswa dulu!','warn'); return; }
+  pendingAdminAction = 'hapus-record';
+  pendingAdminSiswa = nama;
+  showAdminConfirm(
+    '🗑️',
+    `Hapus Semua Record ${nama} Hari Ini?`,
+    `Semua record absen masuk & pulang ${nama} hari ini akan DIHAPUS permanen. Aksi ini tidak bisa dibatalkan!`,
+    'alpha'
+  );
 }
 
 // ===================== KONTROL HARI INI =====================
