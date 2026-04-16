@@ -1323,6 +1323,16 @@ function exportWA(){
   navigator.clipboard.writeText(txt).then(()=>showToast('Rekap disalin! Paste ke WA','success'));
 }
 
+// ===================== NAV =====================
+function showPage(p, e){
+  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(el=>el.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  if(e && e.target) e.target.classList.add('active');
+  if(p==='dashboard') loadDashboard();
+  if(p==='rekap') loadRekap();
+}
+
 // ===================== TOAST =====================
 function showToast(msg,type=''){
   const t=document.getElementById('toast');
