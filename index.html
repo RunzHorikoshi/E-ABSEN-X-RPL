@@ -407,25 +407,25 @@
 
   <!-- Row 1: Hadir gede full width -->
   <div style="margin-bottom:8px;">
-    <div class="stat-card stat-hadir" style="text-align:center;padding:1.25rem;">
-      <div class="stat-num" id="dHadir" style="font-size:40px;">0</div>
-      <div class="stat-lbl">Hadir</div>
+    <div class="stat-card stat-hadir" style="text-align:center;padding:1rem 1.25rem;display:flex;align-items:center;justify-content:center;gap:12px;">
+      <div class="stat-num" id="dHadir" style="font-size:32px;line-height:1;">0</div>
+      <div class="stat-lbl" style="font-size:13px;text-align:left;">Hadir</div>
     </div>
   </div>
   <!-- Row 2: Hadir Masuk & Pulang -->
-  <div class="stat-grid" style="grid-template-columns:1fr 1fr;margin-bottom:8px;">
-    <div class="stat-card stat-hadir" style="border-color:var(--green-border);"><div class="stat-num" style="color:var(--green);font-size:20px;" id="dHadirMasuk">0</div><div class="stat-lbl">Hadir Masuk</div></div>
-    <div class="stat-card" style="border-color:var(--blue-border);"><div class="stat-num" style="color:var(--accent);font-size:20px;" id="dHadirPulang">0</div><div class="stat-lbl">Pulang</div></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+    <div class="stat-card stat-hadir" style="border-color:var(--green-border);padding:12px 14px;"><div class="stat-num" style="color:var(--green);font-size:22px;" id="dHadirMasuk">0</div><div class="stat-lbl">Hadir Masuk</div></div>
+    <div class="stat-card" style="border-color:var(--blue-border);padding:12px 14px;"><div class="stat-num" style="color:var(--accent);font-size:22px;" id="dHadirPulang">0</div><div class="stat-lbl">Pulang</div></div>
   </div>
   <!-- Row 3: Belum & Sakit -->
-  <div class="stat-grid" style="grid-template-columns:1fr 1fr;margin-bottom:8px;">
-    <div class="stat-card"><div class="stat-num" style="color:var(--muted);font-size:20px;" id="dBelum">0</div><div class="stat-lbl">Belum</div></div>
-    <div class="stat-card stat-sakit"><div class="stat-num" id="dSakit">0</div><div class="stat-lbl">Sakit</div></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+    <div class="stat-card" style="padding:12px 14px;"><div class="stat-num" style="color:var(--muted);font-size:22px;" id="dBelum">0</div><div class="stat-lbl">Belum</div></div>
+    <div class="stat-card stat-sakit" style="padding:12px 14px;"><div class="stat-num" style="font-size:22px;" id="dSakit">0</div><div class="stat-lbl">Sakit</div></div>
   </div>
   <!-- Row 4: Izin & Pancung -->
-  <div class="stat-grid-2" style="grid-template-columns:1fr 1fr;margin-bottom:1rem;">
-    <div class="stat-card stat-izin"><div class="stat-num" id="dIzin">0</div><div class="stat-lbl">Izin</div></div>
-    <div class="stat-card stat-pancung"><div class="stat-num" id="dPancung">0</div><div class="stat-lbl">Pancung</div></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem;">
+    <div class="stat-card stat-izin" style="padding:12px 14px;"><div class="stat-num" style="font-size:22px;" id="dIzin">0</div><div class="stat-lbl">Izin</div></div>
+    <div class="stat-card stat-pancung" style="padding:12px 14px;"><div class="stat-num" style="font-size:22px;" id="dPancung">0</div><div class="stat-lbl">Pancung</div></div>
   </div>
   <!-- Alpha tetap ada di DOM tapi tersembunyi (masih dipakai di logika dashboard) -->
   <div style="display:none;"><span id="dAlpha">0</span></div>
