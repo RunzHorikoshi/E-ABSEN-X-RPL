@@ -312,7 +312,7 @@
   <div class="window-row">
     <div class="window-card">
       <div class="window-label">Absen Masuk</div>
-      <div class="window-time">06:00 – 09:30</div>
+      <div class="window-time">06:00 – 10:30</div>
       <div class="window-status" id="winMasukStatus">—</div>
     </div>
     <div class="window-card">
@@ -348,7 +348,7 @@
     <button class="absen-btn masuk" id="btnMasuk" onclick="triggerAbsen('masuk')" disabled>
       <span class="btn-icon">✅</span>
       <span class="btn-label">Absen Masuk</span>
-      <span class="btn-sub">06:00 – 09:30</span>
+      <span class="btn-sub">06:00 – 10:30</span>
     </button>
     <button class="absen-btn pulang" id="btnPulang" onclick="triggerAbsen('pulang')" disabled>
       <span class="btn-icon">🏠</span>
@@ -405,18 +405,30 @@
     <button class="filter-btn" onclick="setFilter('semester',this)">Semester</button>
   </div>
 
-  <div class="stat-grid" style="grid-template-columns: repeat(4,1fr);">
-    <div class="stat-card stat-hadir"><div class="stat-num" id="dHadir">0</div><div class="stat-lbl">Hadir</div></div>
+  <!-- Row 1: Hadir gede full width -->
+  <div style="margin-bottom:8px;">
+    <div class="stat-card stat-hadir" style="text-align:center;padding:1.25rem;">
+      <div class="stat-num" id="dHadir" style="font-size:40px;">0</div>
+      <div class="stat-lbl">Hadir</div>
+    </div>
+  </div>
+  <!-- Row 2: Hadir Masuk & Pulang -->
+  <div class="stat-grid" style="grid-template-columns:1fr 1fr;margin-bottom:8px;">
     <div class="stat-card stat-hadir" style="border-color:var(--green-border);"><div class="stat-num" style="color:var(--green);font-size:20px;" id="dHadirMasuk">0</div><div class="stat-lbl">Hadir Masuk</div></div>
-    <div class="stat-card" style="border-color:var(--blue-border);"><div class="stat-num" style="color:var(--accent);font-size:20px;" id="dHadirPulang">0</div><div class="stat-lbl">Hadir Pulang</div></div>
-    <div class="stat-card stat-alpha"><div class="stat-num" id="dAlpha">0</div><div class="stat-lbl">Alpha</div></div>
+    <div class="stat-card" style="border-color:var(--blue-border);"><div class="stat-num" style="color:var(--accent);font-size:20px;" id="dHadirPulang">0</div><div class="stat-lbl">Pulang</div></div>
   </div>
-  <div class="stat-grid-2" style="grid-template-columns: repeat(4,1fr);">
-    <div class="stat-card stat-izin"><div class="stat-num" id="dIzin">0</div><div class="stat-lbl">Izin</div></div>
-    <div class="stat-card stat-sakit"><div class="stat-num" id="dSakit">0</div><div class="stat-lbl">Sakit</div></div>
-    <div class="stat-card stat-pancung"><div class="stat-num" id="dPancung">0</div><div class="stat-lbl">Pancung</div></div>
+  <!-- Row 3: Belum & Sakit -->
+  <div class="stat-grid" style="grid-template-columns:1fr 1fr;margin-bottom:8px;">
     <div class="stat-card"><div class="stat-num" style="color:var(--muted);font-size:20px;" id="dBelum">0</div><div class="stat-lbl">Belum</div></div>
+    <div class="stat-card stat-sakit"><div class="stat-num" id="dSakit">0</div><div class="stat-lbl">Sakit</div></div>
   </div>
+  <!-- Row 4: Izin & Pancung -->
+  <div class="stat-grid-2" style="grid-template-columns:1fr 1fr;margin-bottom:1rem;">
+    <div class="stat-card stat-izin"><div class="stat-num" id="dIzin">0</div><div class="stat-lbl">Izin</div></div>
+    <div class="stat-card stat-pancung"><div class="stat-num" id="dPancung">0</div><div class="stat-lbl">Pancung</div></div>
+  </div>
+  <!-- Alpha tetap ada di DOM tapi tersembunyi (masih dipakai di logika dashboard) -->
+  <div style="display:none;"><span id="dAlpha">0</span></div>
 
   <!-- ADMIN PANEL -->
   <div class="admin-section">
@@ -674,7 +686,7 @@ function updateWindowStatus(d){
   const day = d.getDay(), valid = day>=1&&day<=5;
   const wm = document.getElementById('winMasukStatus');
   if(!valid){ wm.textContent='Libur'; wm.className='window-status closed'; }
-  else if(inWindow('06:00','09:30',d)){ wm.textContent='Sedang buka'; wm.className='window-status open'; }
+  else if(inWindow('06:00','10:30',d)){ wm.textContent='Sedang buka'; wm.className='window-status open'; }
   else { wm.textContent=nowMin(d)<parseMin('06:00')?'Belum buka':'Sudah tutup'; wm.className='window-status closed'; }
 
   const jp = JADWAL_PULANG[String(day)];
@@ -739,7 +751,7 @@ function updateButtons(d){
   }
 
   if(sudahM){ bm.disabled=true; bm.className='absen-btn masuk done'; bm.querySelector('.btn-label').textContent='Sudah Absen ✓'; }
-  else { bm.disabled=!(valid&&gpsOk&&inWindow('06:00','09:30',d)&&!!nama); bm.className='absen-btn masuk'; bm.querySelector('.btn-label').textContent='Absen Masuk'; }
+  else { bm.disabled=!(valid&&gpsOk&&inWindow('06:00','10:30',d)&&!!nama); bm.className='absen-btn masuk'; bm.querySelector('.btn-label').textContent='Absen Masuk'; }
 
   if(sudahP){ bp.disabled=true; bp.className='absen-btn pulang done-pulang'; bp.querySelector('.btn-label').textContent='Sudah Absen ✓'; }
   else {
