@@ -702,7 +702,7 @@ async function autoAlphaCheck(d){
   if(isHariLibur) return;               // skip hari libur
   if(!autoAlphaEnabled) return;         // skip kalau dimatiin admin
   // Hanya trigger setelah jam 10:00
-  if(nowMin(d) < parseMin('10:00')) return;
+  if(nowMin(d) < parseMin('15:00')) return;
 
   const today = d.toISOString().slice(0,10);
   // Sudah dijalankan hari ini? skip
