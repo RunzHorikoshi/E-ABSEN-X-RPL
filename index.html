@@ -312,7 +312,7 @@
   <div style="margin-bottom:1rem;">
     <div class="window-card" style="border-radius:12px;">
       <div class="window-label">Absen Masuk</div>
-      <div class="window-time" id="winMasukTime">06:00 – 10:00</div>
+      <div class="window-time" id="winMasukTime">06:00 – 20:00</div>
       <div class="window-status" id="winMasukStatus">—</div>
     </div>
   </div>
@@ -342,7 +342,7 @@
     <button class="absen-btn masuk" id="btnMasuk" onclick="triggerAbsen('masuk')" disabled style="width:100%;display:flex;flex-direction:column;align-items:center;gap:6px;">
       <span class="btn-icon">✅</span>
       <span class="btn-label">Absen Masuk</span>
-      <span class="btn-sub">06:00 – 10:00</span>
+      <span class="btn-sub">06:00 – 20:00</span>
     </button>
   </div>
 
@@ -617,7 +617,7 @@ const SISWA = [
 ];
 const HARI = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
 const BULAN = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
-const JADWAL_MASUK = { buka: '06:00', tutup: '10:00' };
+const JADWAL_MASUK = { buka: '06:00', tutup: '20:00' };
 // Jadwal pulang dihapus — absen pulang tidak digunakan
 
 let gpsOk = false, pendingType = null, selectedStatus = 'hadir';
@@ -660,7 +660,7 @@ function updateWindowStatus(d){
   const day = d.getDay(), valid = day>=1&&day<=5;
   const wm = document.getElementById('winMasukStatus');
   if(!valid){ wm.textContent='Libur'; wm.className='window-status closed'; }
-  else if(inWindow('06:00','10:00',d)){ wm.textContent='Sedang buka'; wm.className='window-status open'; }
+  else if(inWindow('06:00','20:00',d)){ wm.textContent='Sedang buka'; wm.className='window-status open'; }
   else { wm.textContent=nowMin(d)<parseMin('06:00')?'Belum buka':'Sudah tutup'; wm.className='window-status closed'; }
 }
 
@@ -710,7 +710,7 @@ function updateButtons(d){
   }
 
   if(sudahM){ bm.disabled=true; bm.className='absen-btn masuk done'; bm.querySelector('.btn-label').textContent='Sudah Absen ✓'; }
-  else { bm.disabled=!(valid&&gpsOk&&inWindow('06:00','10:00',d)&&!!nama); bm.className='absen-btn masuk'; bm.querySelector('.btn-label').textContent='Absen Masuk'; }
+  else { bm.disabled=!(valid&&gpsOk&&inWindow('06:00','20:00',d)&&!!nama); bm.className='absen-btn masuk'; bm.querySelector('.btn-label').textContent='Absen Masuk'; }
 }
 
 // ===================== MODAL ABSEN =====================
