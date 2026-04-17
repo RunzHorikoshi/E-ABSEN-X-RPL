@@ -154,7 +154,7 @@
 
   .rekap-item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 6px; }
   .rekap-nama { font-size: 13px; font-weight: 600; margin-bottom: 8px; }
-  .rekap-bar { display: flex; gap: 4px; height: 6px; border-radius: 4px; overflow: hidden; margin-bottom: 6px; background: var(--surface2); }
+  .rekap-bar { display: flex; height: 6px; border-radius: 4px; overflow: hidden; margin-bottom: 6px; background: var(--surface2); }
   .bar-hadir { background: var(--green); } .bar-izin { background: var(--yellow); } .bar-sakit { background: var(--purple); } .bar-alpha { background: var(--red); } .bar-pancung { background: var(--orange); }
   .rekap-detail { display: flex; gap: 8px; font-size: 11px; flex-wrap: wrap; }
   .rekap-detail span { display: flex; align-items: center; gap: 4px; color: var(--muted); }
@@ -177,8 +177,8 @@
   .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
   .modal-sub { font-size: 13px; color: var(--muted); margin-bottom: 1.25rem; }
 
-  /* STATUS PILIHAN ABSEN — 3 opsi: Hadir, Alpha (admin), Pancung (admin) */
-  .status-options { display: grid; grid-template-columns: 1fr; gap: 6px; margin-bottom: 6px; }
+  /* STATUS PILIHAN ABSEN — 5 opsi */
+  .status-options { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; margin-bottom: 6px; }
   .status-options-2 { display: grid; grid-template-columns: repeat(2,1fr); gap: 6px; margin-bottom: 1rem; }
   .status-opt { padding: 8px 4px; border-radius: 10px; border: 1px solid var(--border2); background: var(--surface2); color: var(--muted); font-size: 11px; font-weight: 600; cursor: pointer; text-align: center; font-family: 'Plus Jakarta Sans', sans-serif; transition: all 0.15s; }
   .status-opt.admin-only { position: relative; }
@@ -309,11 +309,16 @@
     <div class="clock-wib">WIB</div>
   </div>
 
-  <div style="margin-bottom:1rem;">
-    <div class="window-card" style="border-radius:12px;">
+  <div class="window-row">
+    <div class="window-card">
       <div class="window-label">Absen Masuk</div>
-      <div class="window-time" id="winMasukTime">06:00 – 20:00</div>
+      <div class="window-time">06:00 – 09:30</div>
       <div class="window-status" id="winMasukStatus">—</div>
+    </div>
+    <div class="window-card">
+      <div class="window-label">Absen Pulang</div>
+      <div class="window-time" id="winPulangTime">—</div>
+      <div class="window-status" id="winPulangStatus">—</div>
     </div>
   </div>
 
@@ -335,14 +340,20 @@
   <div class="status-card" id="statusCard">
     <div class="section-label" style="margin-bottom:6px;">Status hari ini</div>
     <div class="status-row"><span class="status-key">Absen Masuk</span><span class="status-val" id="stMasuk">—</span></div>
+    <div class="status-row"><span class="status-key">Absen Pulang</span><span class="status-val" id="stPulang">—</span></div>
     <div class="status-row"><span class="status-key">Keterangan</span><span class="status-val" id="stKet">—</span></div>
   </div>
 
-  <div style="margin-bottom:1rem;">
-    <button class="absen-btn masuk" id="btnMasuk" onclick="triggerAbsen('masuk')" disabled style="width:100%;display:flex;flex-direction:column;align-items:center;gap:6px;">
+  <div class="absen-grid">
+    <button class="absen-btn masuk" id="btnMasuk" onclick="triggerAbsen('masuk')" disabled>
       <span class="btn-icon">✅</span>
       <span class="btn-label">Absen Masuk</span>
-      <span class="btn-sub">06:00 – 20:00</span>
+      <span class="btn-sub">06:00 – 09:30</span>
+    </button>
+    <button class="absen-btn pulang" id="btnPulang" onclick="triggerAbsen('pulang')" disabled>
+      <span class="btn-icon">🏠</span>
+      <span class="btn-label">Absen Pulang</span>
+      <span class="btn-sub" id="subPulang">—</span>
     </button>
   </div>
 
@@ -394,12 +405,14 @@
     <button class="filter-btn" onclick="setFilter('semester',this)">Semester</button>
   </div>
 
-  <div class="stat-grid">
+  <div class="stat-grid" style="grid-template-columns: repeat(4,1fr);">
     <div class="stat-card stat-hadir"><div class="stat-num" id="dHadir">0</div><div class="stat-lbl">Hadir</div></div>
+    <div class="stat-card stat-hadir" style="border-color:var(--green-border);"><div class="stat-num" style="color:var(--green);font-size:20px;" id="dHadirMasuk">0</div><div class="stat-lbl">Hadir Masuk</div></div>
+    <div class="stat-card" style="border-color:var(--blue-border);"><div class="stat-num" style="color:var(--accent);font-size:20px;" id="dHadirPulang">0</div><div class="stat-lbl">Hadir Pulang</div></div>
     <div class="stat-card stat-alpha"><div class="stat-num" id="dAlpha">0</div><div class="stat-lbl">Alpha</div></div>
-    <div class="stat-card stat-izin"><div class="stat-num" id="dIzin">0</div><div class="stat-lbl">Izin</div></div>
   </div>
-  <div class="stat-grid-2">
+  <div class="stat-grid-2" style="grid-template-columns: repeat(4,1fr);">
+    <div class="stat-card stat-izin"><div class="stat-num" id="dIzin">0</div><div class="stat-lbl">Izin</div></div>
     <div class="stat-card stat-sakit"><div class="stat-num" id="dSakit">0</div><div class="stat-lbl">Sakit</div></div>
     <div class="stat-card stat-pancung"><div class="stat-num" id="dPancung">0</div><div class="stat-lbl">Pancung</div></div>
     <div class="stat-card"><div class="stat-num" style="color:var(--muted);font-size:20px;" id="dBelum">0</div><div class="stat-lbl">Belum</div></div>
@@ -429,7 +442,8 @@
   <div class="kontrol-section">
     <div class="kontrol-title">⚙️ Kontrol Hari Ini <span class="admin-badge">ADMIN ONLY</span></div>
     <div class="kontrol-row">
-      <button class="kontrol-btn" id="btnToggleLibur" onclick="triggerKontrol('toggle-libur')" style="width:100%;">📅 Tandai Hari Libur</button>
+      <button class="kontrol-btn" id="btnAlphaSemuaManual" onclick="adminAlpaAll()">❌ Alpha Semua Belum Absen</button>
+      <button class="kontrol-btn" id="btnToggleLibur" onclick="triggerKontrol('toggle-libur')">📅 Tandai Libur</button>
     </div>
   </div>
 
@@ -527,8 +541,9 @@
 
     <div id="statusOptsWrap" style="display:none;">
       <div class="section-label" style="margin-bottom:6px;">Status kehadiran</div>
-      <div style="margin-bottom:6px;">
-        <button class="status-opt selected-hadir" id="opt-hadir" onclick="selectStatus('hadir')" style="width:100%;padding:10px;">✅ Hadir</button>
+      <div class="status-options" style="grid-template-columns: 1fr 1fr;">
+        <button class="status-opt selected-hadir" id="opt-hadir" onclick="selectStatus('hadir')">✅ Hadir</button>
+        <button class="status-opt" id="opt-sakit" onclick="selectStatus('sakit')">🤒 Sakit</button>
       </div>
       <div class="status-options-2">
         <button class="status-opt admin-only" id="opt-alpha" onclick="selectStatus('alpha')">❌ Alpha</button>
@@ -608,7 +623,7 @@ const LOGO_RPL_B64 = 'data:image/png;base64,/9j/4AAQSkZJRgABAQAASABIAAD/4QBMRXhp
 ['logoRpl','logoRpl2','logoRpl3'].forEach(id=>{ const el=document.getElementById(id); if(el) el.src=LOGO_RPL_B64; });
 
 // ===================== CONFIG =====================
-const SCHOOL_LAT = 0.5488, SCHOOL_LNG = 109.3815, RADIUS_M = 11375;
+const SCHOOL_LAT = 0.5488, SCHOOL_LNG = 109.3815, RADIUS_M = 375;
 const ADMIN_PIN = 'KOCAKK'; // Ganti PIN admin di sini
 const SISWA = [
   "ALFIANA TESI","APIN","BENI FEBRIAN","BODON","BRIGIDI DIVO","DERLIN KRISTI","DOSO","ELIZA BUDIYATI","FITRAH AGUNG REZEKI",
@@ -617,15 +632,14 @@ const SISWA = [
 ];
 const HARI = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
 const BULAN = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
-const JADWAL_MASUK = { buka: '06:00', tutup: '20:00' };
-// Jadwal pulang dihapus — absen pulang tidak digunakan
+const JADWAL_PULANG = {'1':'13:10-13:30','2':'13:10-13:30','3':'13:10-13:30','4':'13:10-13:30','5':'11:55-12:20'};
 
 let gpsOk = false, pendingType = null, selectedStatus = 'hadir';
 let currentFilter = 'hari', currentRekapTab = 'bulan';
 let todayLogs = [];
 let pendingAdminAction = null, pendingAdminSiswa = null;
 let izinType = 'izin';
-let isHariLibur = false;
+let isHariLibur = false;       // toggle hari libur
 
 // ===================== INIT SISWA =====================
 const sel = document.getElementById('siswaSelect');
@@ -660,11 +674,21 @@ function updateWindowStatus(d){
   const day = d.getDay(), valid = day>=1&&day<=5;
   const wm = document.getElementById('winMasukStatus');
   if(!valid){ wm.textContent='Libur'; wm.className='window-status closed'; }
-  else if(inWindow('06:00','20:00',d)){ wm.textContent='Sedang buka'; wm.className='window-status open'; }
+  else if(inWindow('06:00','09:30',d)){ wm.textContent='Sedang buka'; wm.className='window-status open'; }
   else { wm.textContent=nowMin(d)<parseMin('06:00')?'Belum buka':'Sudah tutup'; wm.className='window-status closed'; }
+
+  const jp = JADWAL_PULANG[String(day)];
+  const wpt = document.getElementById('winPulangTime'), wps = document.getElementById('winPulangStatus');
+  if(!jp){ wpt.textContent='—'; wps.textContent='Libur'; wps.className='window-status closed'; }
+  else {
+    const [a,b] = jp.split('-');
+    wpt.textContent = jp.replace('-',' – ');
+    document.getElementById('subPulang').textContent = jp.replace('-',' – ');
+    if(inWindow(a,b,d)){ wps.textContent='Sedang buka'; wps.className='window-status open'; }
+    else { wps.textContent=nowMin(d)<parseMin(a)?'Belum buka':'Sudah tutup'; wps.className='window-status closed'; }
+  }
 }
 
-// Auto alpha dihapus — gunakan tombol Alpha Manual / Alpha Semua di Admin Panel
 
 // ===================== GPS =====================
 function haversine(la1,lo1,la2,lo2){
@@ -693,24 +717,36 @@ function onSiswaChange(){
   if(!nama){ sc.style.display='none'; updateButtons(new Date()); return; }
   sc.style.display='block';
   const m = todayLogs.find(l=>l.nama===nama&&l.tipe==='masuk');
+  const p = todayLogs.find(l=>l.nama===nama&&l.tipe==='pulang');
   document.getElementById('stMasuk').textContent = m ? `${m.waktu} (${m.status})` : '—';
-  document.getElementById('stKet').textContent = m?.keterangan || '—';
+  document.getElementById('stPulang').textContent = p ? `${p.waktu} (${p.status})` : '—';
+  document.getElementById('stKet').textContent = m?.keterangan || p?.keterangan || '—';
   updateButtons(new Date());
 }
 
 function updateButtons(d){
   const nama = document.getElementById('siswaSelect').value;
   const day=d.getDay(), valid=day>=1&&day<=5;
+  const jp=JADWAL_PULANG[String(day)];
   const sudahM = nama&&todayLogs.some(l=>l.nama===nama&&l.tipe==='masuk');
-  const bm=document.getElementById('btnMasuk');
+  const sudahP = nama&&todayLogs.some(l=>l.nama===nama&&l.tipe==='pulang');
+  const bm=document.getElementById('btnMasuk'), bp=document.getElementById('btnPulang');
 
   if(isHariLibur){
     bm.disabled=true; bm.className='absen-btn masuk'; bm.querySelector('.btn-label').textContent='🎉 Sedang Libur';
+    bp.disabled=true; bp.className='absen-btn pulang'; bp.querySelector('.btn-label').textContent='🎉 Sedang Libur';
     return;
   }
 
   if(sudahM){ bm.disabled=true; bm.className='absen-btn masuk done'; bm.querySelector('.btn-label').textContent='Sudah Absen ✓'; }
-  else { bm.disabled=!(valid&&gpsOk&&inWindow('06:00','20:00',d)&&!!nama); bm.className='absen-btn masuk'; bm.querySelector('.btn-label').textContent='Absen Masuk'; }
+  else { bm.disabled=!(valid&&gpsOk&&inWindow('06:00','09:30',d)&&!!nama); bm.className='absen-btn masuk'; bm.querySelector('.btn-label').textContent='Absen Masuk'; }
+
+  if(sudahP){ bp.disabled=true; bp.className='absen-btn pulang done-pulang'; bp.querySelector('.btn-label').textContent='Sudah Absen ✓'; }
+  else {
+    let canP=false;
+    if(jp){ const [a,b]=jp.split('-'); canP=valid&&gpsOk&&inWindow(a,b,d)&&!!nama&&sudahM; }
+    bp.disabled=!canP; bp.className='absen-btn pulang'; bp.querySelector('.btn-label').textContent='Absen Pulang';
+  }
 }
 
 // ===================== MODAL ABSEN =====================
@@ -730,16 +766,17 @@ function triggerAbsen(type){
 
 function selectStatus(s){
   selectedStatus=s;
-  ['hadir','alpha','pancung'].forEach(x=>{
+  ['hadir','izin','sakit','alpha','pancung'].forEach(x=>{
     const el=document.getElementById('opt-'+x);
     if(el){ el.className='status-opt'+((['alpha','pancung'].includes(x))?' admin-only':''); }
   });
   const el=document.getElementById('opt-'+s);
   if(el) el.classList.add('selected-'+s);
-  document.getElementById('ketWrap').style.display=(s==='pancung'||s==='alpha')?'block':'none';
+  document.getElementById('ketWrap').style.display=(s==='izin'||s==='sakit'||s==='pancung'||s==='alpha')?'block':'none';
   const ktInput = document.getElementById('ketInput');
   if(s==='pancung') ktInput.placeholder='Keterangan pancung (opsional)...';
   else if(s==='alpha') ktInput.placeholder='Keterangan alpha (opsional)...';
+  else ktInput.placeholder='Tulis keterangan (opsional)...';
 }
 
 function closeModal(){ document.getElementById('modalOverlay').classList.remove('show'); }
@@ -855,6 +892,7 @@ async function confirmAdminAction(){
     return;
   }
 
+
   if(action === 'toggle-libur'){
     isHariLibur = !isHariLibur;
     updateKontrolUI();
@@ -940,7 +978,7 @@ function updateKontrolUI(){
   const btnLib = document.getElementById('btnToggleLibur');
   const banner = document.getElementById('liburBanner');
   if(btnLib){
-    btnLib.textContent = isHariLibur ? '✅ Sedang Libur' : '📅 Tandai Hari Libur';
+    btnLib.textContent = isHariLibur ? '✅ Sedang Libur' : '📅 Tandai Libur';
     btnLib.className = 'kontrol-btn' + (isHariLibur ? ' active-libur' : '');
   }
   if(banner){ banner.classList.toggle('show', isHariLibur); }
@@ -1125,7 +1163,18 @@ async function loadDashboard(){
     else if(l.status==='sakit') sakit++;
     else if(l.status==='pancung') pancung++;
   });
+
+  // Hitung hadirMasuk & hadirPulang
+  const hadirMasukLogs = masukLogs.filter(l=>l.status==='hadir');
+  const hadirNama = new Set(hadirMasukLogs.map(l=>l.nama));
+  const pulangLogs = logs.filter(l=>l.tipe==='pulang');
+  const pulangNama = new Set(pulangLogs.map(l=>l.nama));
+  const hadirMasuk = hadirNama.size;
+  const hadirPulang = [...hadirNama].filter(n=>pulangNama.has(n)).length;
+
   document.getElementById('dHadir').textContent=hadir;
+  document.getElementById('dHadirMasuk').textContent=hadirMasuk;
+  document.getElementById('dHadirPulang').textContent=hadirPulang;
   document.getElementById('dAlpha').textContent=alpha;
   document.getElementById('dIzin').textContent=izin;
   document.getElementById('dSakit').textContent=sakit;
@@ -1147,10 +1196,10 @@ async function loadDashboard(){
   const dw=document.getElementById('dashLogWrap');
   dw.innerHTML = logs.slice(0,20).map(l=>`
     <div class="log-item">
-      <div><div class="log-name">${l.nama}</div><div class="log-type">${l.tanggal}${l.keterangan?' · '+l.keterangan:''}</div></div>
+      <div><div class="log-name">${l.nama}</div><div class="log-type">${l.tanggal} · ${l.tipe==='masuk'?'Masuk':'Pulang'}${l.keterangan?' · '+l.keterangan:''}</div></div>
       <div style="display:flex;align-items:center;gap:6px;">
         <span class="log-time">${l.waktu}</span>
-        <span class="log-badge badge-${l.status}">${l.status}</span>
+        <span class="log-badge badge-${l.tipe==='pulang'?'pulang':l.status}">${l.tipe==='pulang'?'pulang':l.status}</span>
       </div>
     </div>`).join('') || '<div class="empty-state">Tidak ada data</div>';
 }
@@ -1195,15 +1244,24 @@ async function loadRekap(){
 
   const wrap=document.getElementById('rekapWrap');
   wrap.innerHTML = SISWA.map(nama=>{
-    const r=rekap[nama], t=r.total||1;
+    const r=rekap[nama];
+    const total = r.hadir + r.izin + r.sakit + r.alpha + r.pancung || 1;
+
+    // Buat array pasangan [warna, nilai], urutkan dari terbesar ke terkecil
+    const bars = [
+      {cls:'bar-hadir', val:r.hadir},
+      {cls:'bar-izin', val:r.izin},
+      {cls:'bar-sakit', val:r.sakit},
+      {cls:'bar-alpha', val:r.alpha},
+      {cls:'bar-pancung', val:r.pancung},
+    ].filter(b=>b.val>0).sort((a,b)=>b.val-a.val);
+
+    const barHTML = bars.map(b=>`<div class="${b.cls}" style="flex:${b.val}"></div>`).join('');
+
     return `<div class="rekap-item">
       <div class="rekap-nama">${nama}</div>
-      <div class="rekap-bar">
-        <div class="bar-hadir" style="width:${r.hadir/t*100}%"></div>
-        <div class="bar-izin" style="width:${r.izin/t*100}%"></div>
-        <div class="bar-sakit" style="width:${r.sakit/t*100}%"></div>
-        <div class="bar-alpha" style="width:${r.alpha/t*100}%"></div>
-        <div class="bar-pancung" style="width:${r.pancung/t*100}%"></div>
+      <div class="rekap-bar" style="gap:0;">
+        ${barHTML}
       </div>
       <div class="rekap-detail">
         <span><span class="dot" style="background:var(--green)"></span>Hadir: ${r.hadir}</span>
