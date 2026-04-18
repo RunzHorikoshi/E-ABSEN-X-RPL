@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
-<title>E-Absen Digital — X RPL GEN 2 · SMKN 1 Mempawah Hulu</title>
+<title>E-Absen Digital — X RPL · SMKN 1 Mempawah Hulu</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
   :root {
@@ -338,8 +338,8 @@
   .wlc-logo-img {
     width: 160px; height: auto;
     position: relative;
-    border-radius: 16px;
-    filter: drop-shadow(0 0 16px rgba(59,130,246,0.5));
+    filter: drop-shadow(0 0 12px rgba(59,130,246,0.4)) brightness(0) invert(1);
+    opacity: 0.92;
   }
   .wlc-headline {
     opacity: 0;
@@ -348,11 +348,11 @@
     margin-bottom: 10px;
   }
   .wlc-eyebrow {
-    font-size: 16px; font-weight: 600;
+    font-size: 13px; font-weight: 600;
     letter-spacing: 5px;
-    color: rgba(59,130,246,0.85);
+    color: rgba(59,130,246,0.75);
     text-transform: uppercase;
-    margin-bottom: 14px;
+    margin-bottom: 12px;
   }
   .wlc-h1 {
     font-size: 40px; font-weight: 700;
@@ -423,10 +423,10 @@
     </div>
     <div class="wlc-headline">
       <p class="wlc-eyebrow">Selamat datang di</p>
-      <h1 class="wlc-h1">Absensi <span>X-RPL GEN 2</span><br><span style="font-size:0.65em;letter-spacing:2px;color:rgba(148,163,184,0.7);font-weight:500;"
+      <h1 class="wlc-h1">E-Absen <span>X-RPL</span></h1>
     </div>
     <div class="wlc-line"></div>
-    <p class="wlc-sub">SMKN 1 Mempawah Hulu</p>
+    <p class="wlc-sub">SMKN 1 Mempawah Hulu · 2025/2026</p>
     <div class="wlc-cta">
       <button class="wlc-btn" onclick="enterApp()">Masuk Absensi</button>
       <span class="wlc-hint">Tap untuk melanjutkan</span>
@@ -457,7 +457,7 @@
     </div>
     <div>
       <div class="school-name">SMKN 1 Mempawah Hulu</div>
-      <div class="school-sub">Absensi Digital · Kelas X RPL GEN 2</div>
+      <div class="school-sub">Absensi Digital · Kelas X RPL</div>
     </div>
   </div>
 
@@ -554,7 +554,7 @@
     </div>
     <div>
       <div class="school-name">Dashboard Absensi</div>
-      <div class="school-sub">X RPL GEN 2 · SMKN 1 Mempawah Hulu</div>
+      <div class="school-sub">X RPL · SMKN 1 Mempawah Hulu</div>
     </div>
   </div>
 
@@ -636,7 +636,7 @@
     </div>
     <div>
       <div class="school-name">Rekap Per Siswa</div>
-      <div class="school-sub">X RPL GEN 2 · SMKN 1 Mempawah Hulu</div>
+      <div class="school-sub">X RPL · SMKN 1 Mempawah Hulu</div>
     </div>
   </div>
 
@@ -1470,7 +1470,7 @@ function exportWA(){
     totalAlpha+=r.alpha; totalPancung+=r.pancung;
   });
 
-  let txt=`*Rekap Absensi X RPL GEN 2*\n*SMKN 1 Mempawah Hulu*\n📅 ${dateFrom} s/d ${dateTo}\n`;
+  let txt=`*Rekap Absensi X RPL*\n*SMKN 1 Mempawah Hulu*\n📅 ${dateFrom} s/d ${dateTo}\n`;
   txt+=`━━━━━━━━━━━━━━━━━━━━\n`;
 
   SISWA.forEach((n,i)=>{
@@ -1489,7 +1489,7 @@ function exportWA(){
   txt+=`❌ Total Alpha : ${totalAlpha}\n`;
   if(totalPancung > 0) txt+=`✂️ Total Pancung: ${totalPancung}\n`;
   txt+=`━━━━━━━━━━━━━━━━━━━━\n`;
-  txt+=`_Dikirim via E-Absen Digital X RPL GEN 2_`;
+  txt+=`_Dikirim via E-Absen Digital X RPL_`;
 
   navigator.clipboard.writeText(txt).then(()=>showToast('Rekap disalin! Paste ke WA','success'));
 }
