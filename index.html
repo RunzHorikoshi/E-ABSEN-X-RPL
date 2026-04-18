@@ -270,9 +270,160 @@
   .lapor-counter { font-size: 11px; color: var(--muted); margin-top: 6px; text-align: center; font-family: 'DM Mono', monospace; }
   .lapor-btn { width: 100%; padding: 11px; border-radius: 10px; border: 1px solid var(--orange-border); background: var(--surface2); color: var(--orange); font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif; transition: all 0.15s; margin-top: 8px; }
   .lapor-btn:hover { background: var(--orange-bg); }
+
+  /* ── WELCOME SCREEN ── */
+  #welcome-screen {
+    position: fixed;
+    inset: 0;
+    background: #0a0f1e;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    transition: opacity 0.5s ease;
+  }
+  #welcome-screen.hide {
+    opacity: 0;
+    pointer-events: none;
+  }
+  #welcome-screen::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(59,130,246,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59,130,246,0.04) 1px, transparent 1px);
+    background-size: 32px 32px;
+    pointer-events: none;
+  }
+  .wlc-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 48px 32px;
+    position: relative;
+    z-index: 1;
+    max-width: 400px;
+    width: 100%;
+  }
+  .wlc-logo-wrap {
+    opacity: 0;
+    transform: translateY(-12px);
+    animation: wlcFadeDown 0.7s ease forwards 0.2s;
+    margin-bottom: 32px;
+    position: relative;
+  }
+  .wlc-logo-glow {
+    position: absolute;
+    width: 130px; height: 44px;
+    background: rgba(59,130,246,0.18);
+    border-radius: 50%;
+    filter: blur(20px);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .wlc-logo-svg {
+    width: 110px; height: auto;
+    position: relative;
+    filter: drop-shadow(0 0 8px rgba(59,130,246,0.35));
+  }
+  .wlc-headline {
+    opacity: 0;
+    transform: translateY(16px);
+    animation: wlcFadeUp 0.6s ease forwards 0.65s;
+    margin-bottom: 10px;
+  }
+  .wlc-eyebrow {
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 4px;
+    color: rgba(59,130,246,0.55);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .wlc-h1 {
+    font-size: 28px; font-weight: 600;
+    color: #f0f4ff; line-height: 1.2;
+  }
+  .wlc-h1 span { color: #3b82f6; }
+  .wlc-line {
+    opacity: 0;
+    animation: wlcFadeIn 0.5s ease forwards 1s;
+    width: 32px; height: 1px;
+    background: rgba(59,130,246,0.3);
+    margin: 0 auto 12px;
+  }
+  .wlc-sub {
+    opacity: 0;
+    animation: wlcFadeIn 0.6s ease forwards 1.1s;
+    font-size: 12px;
+    color: rgba(136,150,179,0.55);
+    margin-bottom: 36px;
+    letter-spacing: 0.5px;
+  }
+  .wlc-cta {
+    opacity: 0;
+    transform: translateY(10px);
+    animation: wlcFadeUp 0.6s ease forwards 1.4s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  .wlc-btn {
+    padding: 13px 44px;
+    background: transparent;
+    border: 1.5px solid rgba(59,130,246,0.45);
+    border-radius: 8px;
+    color: #93c5fd;
+    font-size: 13px; font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    transition: all 0.2s;
+  }
+  .wlc-btn:hover {
+    background: rgba(59,130,246,0.12);
+    border-color: #3b82f6;
+    color: #f0f4ff;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(59,130,246,0.15);
+  }
+  .wlc-btn:active { transform: scale(0.97); }
+  .wlc-hint { font-size: 11px; color: rgba(136,150,179,0.3); letter-spacing: 0.5px; }
+
+  @keyframes wlcFadeUp { to { opacity: 1; transform: translateY(0); } }
+  @keyframes wlcFadeDown { to { opacity: 1; transform: translateY(0); } }
+  @keyframes wlcFadeIn { to { opacity: 1; } }
 </style>
 </head>
 <body>
+
+<!-- ══ WELCOME SCREEN ══ -->
+<div id="welcome-screen">
+  <div class="wlc-inner">
+    <div class="wlc-logo-wrap">
+      <div class="wlc-logo-glow"></div>
+      <svg class="wlc-logo-svg" viewBox="0 0 220 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10 14 L10 66 L24 66 L24 48 L38 48 L50 66 L66 66 L52 46 C60 42 64 35 64 27 C64 19 58 14 46 14 Z M24 24 L44 24 C48 24 50 26 50 30 C50 34 48 38 44 38 L24 38 Z" fill="#93c5fd"/>
+        <path d="M76 14 L76 66 L90 66 L90 48 L110 48 C122 48 130 41 130 31 C130 21 122 14 110 14 Z M90 24 L108 24 C114 24 116 27 116 31 C116 35 114 38 108 38 L90 38 Z" fill="#93c5fd"/>
+        <path d="M142 14 L142 66 L200 66 L200 54 L156 54 L156 14 Z" fill="#93c5fd"/>
+      </svg>
+    </div>
+    <div class="wlc-headline">
+      <p class="wlc-eyebrow">Selamat datang di</p>
+      <h1 class="wlc-h1">E-Absen <span>X-RPL</span></h1>
+    </div>
+    <div class="wlc-line"></div>
+    <p class="wlc-sub">SMKN 1 Mempawah Hulu · 2025/2026</p>
+    <div class="wlc-cta">
+      <button class="wlc-btn" onclick="enterApp()">Masuk Absensi</button>
+      <span class="wlc-hint">Tap untuk melanjutkan</span>
+    </div>
+  </div>
+</div>
 
 <!-- LOADING -->
 <div class="loading-overlay" id="loadingOverlay">
@@ -281,7 +432,7 @@
 </div>
 
 <!-- NAV -->
-<div class="nav">
+<div class="nav" id="mainNav" style="display:none;">
   <button class="nav-btn active" onclick="showPage('absen',event)">Absen</button>
   <button class="nav-btn" onclick="showPage('dashboard',event)">Dashboard</button>
   <button class="nav-btn" onclick="showPage('rekap',event)">Rekap</button>
@@ -1349,6 +1500,19 @@ function showToast(msg,type=''){
   const t=document.getElementById('toast');
   t.textContent=msg; t.className='toast show '+type;
   clearTimeout(t._t); t._t=setTimeout(()=>t.className='toast',3000);
+}
+</script>
+<script>
+function enterApp() {
+  const ws = document.getElementById('welcome-screen');
+  ws.classList.add('hide');
+  setTimeout(function() {
+    ws.style.display = 'none';
+    document.getElementById('mainNav').style.display = 'flex';
+    document.querySelectorAll('.page').forEach(function(p) {
+      if (p.classList.contains('active')) p.style.display = 'block';
+    });
+  }, 500);
 }
 </script>
 </body>
