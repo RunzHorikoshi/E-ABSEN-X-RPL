@@ -445,7 +445,7 @@
   <button class="nav-btn active" onclick="showPage('absen',event)">Absen</button>
   <button class="nav-btn" onclick="showPage('dashboard',event)">Dashboard</button>
   <button class="nav-btn" onclick="showPage('rekap',event)">Rekap</button>
-  <button class="nav-btn" onclick="showPage('izin',event)">📋 Izin/Sakit</button>
+  <button class="nav-btn" onclick="showPage('izin',event)">📋 Izin</button>
 </div>
 
 <!-- ======================== PAGE: ABSEN ======================== -->
@@ -845,9 +845,16 @@ function inWindow(a,b,d){ const n=nowMin(d); return n>=parseMin(a)&&n<=parseMin(
 function updateWindowStatus(d){
   const day = d.getDay(), valid = day>=1&&day<=5;
   const wm = document.getElementById('winMasukStatus');
-  if(!valid){ wm.textContent='Libur'; wm.className='window-status closed'; }
-  else if(inWindow('06:00','10:30',d)){ wm.textContent='Sedang buka'; wm.className='window-status open'; }
-  else { wm.textContent=nowMin(d)<parseMin('06:00')?'Belum buka':'Sudah tutup'; wm.className='window-status closed'; }
+  const wmTime = document.querySelector('#page-absen .window-card:first-child .window-time');
+  if(!valid){
+    if(wmTime) wmTime.textContent='—';
+    wm.textContent='Libur'; wm.className='window-status closed';
+  }
+  else {
+    if(wmTime) wmTime.textContent='06:00 – 10:30';
+    if(inWindow('06:00','10:30',d)){ wm.textContent='Sedang buka'; wm.className='window-status open'; }
+    else { wm.textContent=nowMin(d)<parseMin('06:00')?'Belum buka':'Sudah tutup'; wm.className='window-status closed'; }
+  }
 
   const jp = JADWAL_PULANG[String(day)];
   const wpt = document.getElementById('winPulangTime'), wps = document.getElementById('winPulangStatus');
