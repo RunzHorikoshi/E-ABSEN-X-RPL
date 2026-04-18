@@ -49,7 +49,18 @@
 
   /* PAGES */
   .page { display: none; padding: 1.25rem 1rem 5rem; max-width: 480px; margin: 0 auto; position: relative; z-index: 1; }
-  .page.active { display: block; }
+  .page.active { display: block; animation: pageSlideIn 0.35s ease both; }
+  @keyframes pageSlideIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  .page.active > * { animation: itemFadeUp 0.4s ease both; }
+  .page.active > *:nth-child(1) { animation-delay: 0.05s; }
+  .page.active > *:nth-child(2) { animation-delay: 0.10s; }
+  .page.active > *:nth-child(3) { animation-delay: 0.15s; }
+  .page.active > *:nth-child(4) { animation-delay: 0.20s; }
+  .page.active > *:nth-child(5) { animation-delay: 0.25s; }
+  .page.active > *:nth-child(6) { animation-delay: 0.30s; }
+  .page.active > *:nth-child(7) { animation-delay: 0.33s; }
+  .page.active > *:nth-child(8) { animation-delay: 0.36s; }
+  @keyframes itemFadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 
   /* SCHOOL BADGE WITH LOGOS */
   .school-badge { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border2); border-radius: 12px; padding: 10px 14px; margin-bottom: 1.25rem; }
@@ -1487,10 +1498,17 @@ function exportWA(){
 
 // ===================== NAV =====================
 function showPage(p, e){
-  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(el=>el.classList.remove('active'));
-  document.getElementById('page-'+p).classList.add('active');
   if(e && e.target) e.target.classList.add('active');
+
+  const pages = document.querySelectorAll('.page');
+  const target = document.getElementById('page-'+p);
+
+  // Reset animasi dulu dengan remove active, lalu re-add
+  pages.forEach(el => el.classList.remove('active'));
+  void target.offsetWidth; // reflow biar animasi re-trigger
+  target.classList.add('active');
+
   if(p==='dashboard') loadDashboard();
   if(p==='rekap') loadRekap();
 }
@@ -1508,11 +1526,16 @@ function enterApp() {
   ws.classList.add('hide');
   setTimeout(function() {
     ws.style.display = 'none';
+    // Tampilkan nav
     document.getElementById('mainNav').style.display = 'flex';
-    document.querySelectorAll('.page').forEach(function(p) {
-      if (p.classList.contains('active')) p.style.display = 'block';
-    });
-  }, 500);
+    // Re-trigger animasi page absen dengan reset class active
+    const activePage = document.querySelector('.page.active');
+    if (activePage) {
+      activePage.classList.remove('active');
+      void activePage.offsetWidth; // reflow trigger
+      activePage.classList.add('active');
+    }
+  }, 480);
 }
 </script>
 </body>
