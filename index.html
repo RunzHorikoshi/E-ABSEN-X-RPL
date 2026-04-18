@@ -50,21 +50,23 @@
   /* PAGES */
   .page { display: none; padding: 1.25rem 1rem 5rem; max-width: 480px; margin: 0 auto; position: relative; z-index: 1; }
   .page.active { display: block; }
-  .page.active > * {
-    animation: itemSlideIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
-  }
-  .page.active > *:nth-child(1) { animation-delay: 0.00s; }
-  .page.active > *:nth-child(2) { animation-delay: 0.07s; }
-  .page.active > *:nth-child(3) { animation-delay: 0.13s; }
-  .page.active > *:nth-child(4) { animation-delay: 0.18s; }
-  .page.active > *:nth-child(5) { animation-delay: 0.22s; }
-  .page.active > *:nth-child(6) { animation-delay: 0.26s; }
-  .page.active > *:nth-child(7) { animation-delay: 0.29s; }
-  .page.active > *:nth-child(8) { animation-delay: 0.32s; }
-  @keyframes itemSlideIn {
-    from { opacity: 0; transform: translateX(-28px) scale(0.97); filter: blur(4px); }
-    to   { opacity: 1; transform: translateX(0)     scale(1);    filter: blur(0); }
-  }
+
+  /* Base animation setup for all children */
+  .page.active > * { animation-duration: 0.5s; animation-fill-mode: both; animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1); }
+
+  /* Alternating directions per child */
+  .page.active > *:nth-child(1) { animation-name: slideFromTop;   animation-delay: 0.00s; }
+  .page.active > *:nth-child(2) { animation-name: slideFromLeft;  animation-delay: 0.08s; }
+  .page.active > *:nth-child(3) { animation-name: slideFromRight; animation-delay: 0.15s; }
+  .page.active > *:nth-child(4) { animation-name: slideFromLeft;  animation-delay: 0.21s; }
+  .page.active > *:nth-child(5) { animation-name: slideFromRight; animation-delay: 0.26s; }
+  .page.active > *:nth-child(6) { animation-name: slideFromLeft;  animation-delay: 0.30s; }
+  .page.active > *:nth-child(7) { animation-name: slideFromRight; animation-delay: 0.33s; }
+  .page.active > *:nth-child(8) { animation-name: slideFromLeft;  animation-delay: 0.36s; }
+
+  @keyframes slideFromTop   { from { opacity: 0; transform: translateY(-24px) scale(0.96); filter: blur(3px); } to { opacity: 1; transform: none; filter: blur(0); } }
+  @keyframes slideFromLeft  { from { opacity: 0; transform: translateX(-32px) scale(0.97); filter: blur(3px); } to { opacity: 1; transform: none; filter: blur(0); } }
+  @keyframes slideFromRight { from { opacity: 0; transform: translateX( 32px) scale(0.97); filter: blur(3px); } to { opacity: 1; transform: none; filter: blur(0); } }
 
   /* SCHOOL BADGE WITH LOGOS */
   .school-badge { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border2); border-radius: 12px; padding: 10px 14px; margin-bottom: 1.25rem; }
