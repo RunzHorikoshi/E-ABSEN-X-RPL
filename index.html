@@ -52,17 +52,23 @@
   .page.active { display: block; }
 
   /* Base animation setup for all children */
-  .page.active > * { animation-duration: 0.85s; animation-fill-mode: both; animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1); }
+  .page.active > * { animation-duration: 2s; animation-fill-mode: both; animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1); }
 
-  /* Alternating directions per child */
-  .page.active > *:nth-child(1) { animation-name: slideFromTop;   animation-delay: 0.00s; }
-  .page.active > *:nth-child(2) { animation-name: slideFromLeft;  animation-delay: 0.12s; }
-  .page.active > *:nth-child(3) { animation-name: slideFromRight; animation-delay: 0.22s; }
-  .page.active > *:nth-child(4) { animation-name: slideFromLeft;  animation-delay: 0.31s; }
-  .page.active > *:nth-child(5) { animation-name: slideFromRight; animation-delay: 0.39s; }
-  .page.active > *:nth-child(6) { animation-name: slideFromLeft;  animation-delay: 0.46s; }
-  .page.active > *:nth-child(7) { animation-name: slideFromRight; animation-delay: 0.52s; }
-  .page.active > *:nth-child(8) { animation-name: slideFromLeft;  animation-delay: 0.57s; }
+  /* Alternating directions per child — 14 children covered */
+  .page.active > *:nth-child(1)  { animation-name: slideFromTop;   animation-delay: 0.00s; }
+  .page.active > *:nth-child(2)  { animation-name: slideFromLeft;  animation-delay: 0.14s; }
+  .page.active > *:nth-child(3)  { animation-name: slideFromRight; animation-delay: 0.26s; }
+  .page.active > *:nth-child(4)  { animation-name: slideFromLeft;  animation-delay: 0.37s; }
+  .page.active > *:nth-child(5)  { animation-name: slideFromRight; animation-delay: 0.46s; }
+  .page.active > *:nth-child(6)  { animation-name: slideFromLeft;  animation-delay: 0.80s; }
+  .page.active > *:nth-child(7)  { animation-name: slideFromRight; animation-delay: 0.88s; }
+  .page.active > *:nth-child(8)  { animation-name: slideFromLeft;  animation-delay: 0.67s; }
+  .page.active > *:nth-child(9)  { animation-name: slideFromRight; animation-delay: 0.72s; }
+  .page.active > *:nth-child(10) { animation-name: slideFromLeft;  animation-delay: 0.76s; }
+  .page.active > *:nth-child(11) { animation-name: slideFromRight; animation-delay: 0.80s; }
+  .page.active > *:nth-child(12) { animation-name: slideFromLeft;  animation-delay: 0.83s; }
+  .page.active > *:nth-child(13) { animation-name: slideFromRight; animation-delay: 0.86s; }
+  .page.active > *:nth-child(14) { animation-name: slideFromLeft;  animation-delay: 0.88s; }
 
   @keyframes slideFromTop   { from { opacity: 0; transform: translateY(-30px) scale(0.95); filter: blur(6px); } to { opacity: 1; transform: none; filter: blur(0); } }
   @keyframes slideFromLeft  { from { opacity: 0; transform: translateX(-40px) scale(0.96); filter: blur(6px); } to { opacity: 1; transform: none; filter: blur(0); } }
@@ -328,7 +334,7 @@
   .wlc-logo-wrap {
     opacity: 0;
     transform: translateY(-12px);
-    animation: wlcFadeDown 0.7s ease forwards 0.2s;
+    animation: wlcFadeDown 0.5s ease forwards 0.05s;
     margin-bottom: 36px;
     position: relative;
   }
@@ -350,7 +356,7 @@
   .wlc-headline {
     opacity: 0;
     transform: translateY(16px);
-    animation: wlcFadeUp 0.6s ease forwards 0.65s;
+    animation: wlcFadeUp 0.5s ease forwards 0.3s;
     margin-bottom: 10px;
   }
   .wlc-eyebrow {
@@ -368,14 +374,14 @@
   .wlc-h1 span { color: #3b82f6; }
   .wlc-line {
     opacity: 0;
-    animation: wlcFadeIn 0.5s ease forwards 1s;
+    animation: wlcFadeIn 0.4s ease forwards 0.55s;
     width: 32px; height: 1px;
     background: rgba(59,130,246,0.3);
     margin: 0 auto 12px;
   }
   .wlc-sub {
     opacity: 0;
-    animation: wlcFadeIn 0.6s ease forwards 1.1s;
+    animation: wlcFadeIn 0.4s ease forwards 0.65s;
     font-size: 13px;
     color: rgba(136,150,179,0.75);
     margin-bottom: 40px;
@@ -384,7 +390,7 @@
   .wlc-cta {
     opacity: 0;
     transform: translateY(10px);
-    animation: wlcFadeUp 0.6s ease forwards 1.4s;
+    animation: wlcFadeUp 0.5s ease forwards 0.8s;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -852,6 +858,14 @@ function updateWindowStatus(d){
   const day = d.getDay(), valid = day>=1&&day<=5;
   const wm = document.getElementById('winMasukStatus');
   const wmTime = document.querySelector('#page-absen .window-card:first-child .window-time');
+
+  // Auto show/hide libur banner based on weekend
+  const banner = document.getElementById('liburBanner');
+  if(!valid && !isHariLibur){
+    if(banner) banner.classList.add('show');
+  } else if(valid && !isHariLibur){
+    if(banner) banner.classList.remove('show');
+  }
   if(!valid){
     if(wmTime) wmTime.textContent='—';
     wm.textContent='Libur'; wm.className='window-status closed';
@@ -917,7 +931,7 @@ function updateButtons(d){
   const sudahP = nama&&todayLogs.some(l=>l.nama===nama&&l.tipe==='pulang');
   const bm=document.getElementById('btnMasuk'), bp=document.getElementById('btnPulang');
 
-  if(isHariLibur){
+  if(isHariLibur || !valid){
     bm.disabled=true; bm.className='absen-btn masuk'; bm.querySelector('.btn-label').textContent='🎉 Sedang Libur';
     bp.disabled=true; bp.className='absen-btn pulang'; bp.querySelector('.btn-label').textContent='🎉 Sedang Libur';
     return;
