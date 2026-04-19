@@ -51,28 +51,24 @@
   .page { display: none; padding: 1.25rem 1rem 5rem; max-width: 480px; margin: 0 auto; position: relative; z-index: 1; }
   .page.active { display: block; }
 
-  /* Base animation setup for all children */
-  .page.active > * { animation-duration: 2s; animation-fill-mode: both; animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1); }
+  /* Position-aware animation — JS assigns classes per element */
+  .anim-from-top {
+    animation: animFromTop 0.85s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .anim-from-bottom {
+    animation: animFromBottom 0.85s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .anim-from-left {
+    animation: animFromLeft 0.85s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .anim-from-right {
+    animation: animFromRight 0.85s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
 
-  /* Alternating directions per child — 14 children covered */
-  .page.active > *:nth-child(1)  { animation-name: slideFromTop;   animation-delay: 0.00s; }
-  .page.active > *:nth-child(2)  { animation-name: slideFromLeft;  animation-delay: 0.14s; }
-  .page.active > *:nth-child(3)  { animation-name: slideFromRight; animation-delay: 0.26s; }
-  .page.active > *:nth-child(4)  { animation-name: slideFromLeft;  animation-delay: 0.37s; }
-  .page.active > *:nth-child(5)  { animation-name: slideFromRight; animation-delay: 0.46s; }
-  .page.active > *:nth-child(6)  { animation-name: slideFromLeft;  animation-delay: 0.80s; }
-  .page.active > *:nth-child(7)  { animation-name: slideFromRight; animation-delay: 0.88s; }
-  .page.active > *:nth-child(8)  { animation-name: slideFromLeft;  animation-delay: 0.67s; }
-  .page.active > *:nth-child(9)  { animation-name: slideFromRight; animation-delay: 0.72s; }
-  .page.active > *:nth-child(10) { animation-name: slideFromLeft;  animation-delay: 0.76s; }
-  .page.active > *:nth-child(11) { animation-name: slideFromRight; animation-delay: 0.80s; }
-  .page.active > *:nth-child(12) { animation-name: slideFromLeft;  animation-delay: 0.83s; }
-  .page.active > *:nth-child(13) { animation-name: slideFromRight; animation-delay: 0.86s; }
-  .page.active > *:nth-child(14) { animation-name: slideFromLeft;  animation-delay: 0.88s; }
-
-  @keyframes slideFromTop   { from { opacity: 0; transform: translateY(-30px) scale(0.95); filter: blur(6px); } to { opacity: 1; transform: none; filter: blur(0); } }
-  @keyframes slideFromLeft  { from { opacity: 0; transform: translateX(-40px) scale(0.96); filter: blur(6px); } to { opacity: 1; transform: none; filter: blur(0); } }
-  @keyframes slideFromRight { from { opacity: 0; transform: translateX( 40px) scale(0.96); filter: blur(6px); } to { opacity: 1; transform: none; filter: blur(0); } }
+  @keyframes animFromTop    { from { opacity:0; transform: translateY(-40px) scale(0.95); filter:blur(8px); } to { opacity:1; transform:none; filter:blur(0); } }
+  @keyframes animFromBottom { from { opacity:0; transform: translateY( 40px) scale(0.95); filter:blur(8px); } to { opacity:1; transform:none; filter:blur(0); } }
+  @keyframes animFromLeft   { from { opacity:0; transform: translateX(-44px) scale(0.96); filter:blur(8px); } to { opacity:1; transform:none; filter:blur(0); } }
+  @keyframes animFromRight  { from { opacity:0; transform: translateX( 44px) scale(0.96); filter:blur(8px); } to { opacity:1; transform:none; filter:blur(0); } }
 
   /* SCHOOL BADGE WITH LOGOS */
   .school-badge { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border2); border-radius: 12px; padding: 10px 14px; margin-bottom: 1.25rem; }
@@ -334,7 +330,7 @@
   .wlc-logo-wrap {
     opacity: 0;
     transform: translateY(-12px);
-    animation: wlcFadeDown 0.5s ease forwards 0.05s;
+    animation: wlcFadeDown 0.7s ease forwards 0.2s;
     margin-bottom: 36px;
     position: relative;
   }
@@ -356,7 +352,7 @@
   .wlc-headline {
     opacity: 0;
     transform: translateY(16px);
-    animation: wlcFadeUp 0.5s ease forwards 0.3s;
+    animation: wlcFadeUp 0.6s ease forwards 0.65s;
     margin-bottom: 10px;
   }
   .wlc-eyebrow {
@@ -374,14 +370,14 @@
   .wlc-h1 span { color: #3b82f6; }
   .wlc-line {
     opacity: 0;
-    animation: wlcFadeIn 0.4s ease forwards 0.55s;
+    animation: wlcFadeIn 0.5s ease forwards 1s;
     width: 32px; height: 1px;
     background: rgba(59,130,246,0.3);
     margin: 0 auto 12px;
   }
   .wlc-sub {
     opacity: 0;
-    animation: wlcFadeIn 0.4s ease forwards 0.65s;
+    animation: wlcFadeIn 0.6s ease forwards 1.1s;
     font-size: 13px;
     color: rgba(136,150,179,0.75);
     margin-bottom: 40px;
@@ -390,7 +386,7 @@
   .wlc-cta {
     opacity: 0;
     transform: translateY(10px);
-    animation: wlcFadeUp 0.5s ease forwards 0.8s;
+    animation: wlcFadeUp 0.6s ease forwards 1.4s;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -422,9 +418,50 @@
   @keyframes wlcFadeUp { to { opacity: 1; transform: translateY(0); } }
   @keyframes wlcFadeDown { to { opacity: 1; transform: translateY(0); } }
   @keyframes wlcFadeIn { to { opacity: 1; } }
+
+  /* ── CINEMATIC OVERLAY ── */
+  #cinematic-overlay {
+    position: fixed; inset: 0; background: #000;
+    z-index: 10000; display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; flex-direction: column; gap: 20px;
+  }
+  #cinematic-overlay.active { pointer-events: all; }
+  .cinematic-text {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: clamp(12px, 3.8vw, 17px);
+    font-weight: 700; letter-spacing: 7px; text-transform: uppercase;
+    color: #ef4444;
+    text-shadow: 0 0 40px rgba(239,68,68,0.6), 0 0 80px rgba(239,68,68,0.2);
+    opacity: 0; transform: translateY(32px); display: block; text-align: center;
+    padding: 0 24px;
+  }
+  .cinematic-bar {
+    width: 0px; height: 1px; background: rgba(239,68,68,0.55); opacity: 0;
+  }
+
+  /* ── WELCOME EXIT ── */
+  #welcome-screen { transition: none; }
+  #welcome-screen.hide {
+    animation: welcomeExit 0.7s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    pointer-events: none;
+  }
+  @keyframes welcomeExit {
+    0%   { opacity: 1; transform: scale(1)    translateY(0);     filter: blur(0px); }
+    30%  { opacity: 1; transform: scale(1.04) translateY(-8px);  filter: blur(0px); }
+    100% { opacity: 0; transform: scale(0.93) translateY(-55px); filter: blur(10px); }
+  }
+  .wlc-btn:active { transform: scale(0.94); box-shadow: 0 0 0 4px rgba(59,130,246,0.2); }
+
 </style>
 </head>
 <body>
+
+<!-- ── CINEMATIC OVERLAY ── -->
+<div id="cinematic-overlay">
+  <div class="cinematic-bar" id="cin-bar"></div>
+  <span class="cinematic-text" id="cin-text">PASTIKAN SUDAH MEMBACA PERATURAN</span>
+  <div class="cinematic-bar" id="cin-bar2"></div>
+</div>
 
 <!-- ══ WELCOME SCREEN ══ -->
 <div id="welcome-screen">
@@ -858,14 +895,6 @@ function updateWindowStatus(d){
   const day = d.getDay(), valid = day>=1&&day<=5;
   const wm = document.getElementById('winMasukStatus');
   const wmTime = document.querySelector('#page-absen .window-card:first-child .window-time');
-
-  // Auto show/hide libur banner based on weekend
-  const banner = document.getElementById('liburBanner');
-  if(!valid && !isHariLibur){
-    if(banner) banner.classList.add('show');
-  } else if(valid && !isHariLibur){
-    if(banner) banner.classList.remove('show');
-  }
   if(!valid){
     if(wmTime) wmTime.textContent='—';
     wm.textContent='Libur'; wm.className='window-status closed';
@@ -931,7 +960,7 @@ function updateButtons(d){
   const sudahP = nama&&todayLogs.some(l=>l.nama===nama&&l.tipe==='pulang');
   const bm=document.getElementById('btnMasuk'), bp=document.getElementById('btnPulang');
 
-  if(isHariLibur || !valid){
+  if(isHariLibur){
     bm.disabled=true; bm.className='absen-btn masuk'; bm.querySelector('.btn-label').textContent='🎉 Sedang Libur';
     bp.disabled=true; bp.className='absen-btn pulang'; bp.querySelector('.btn-label').textContent='🎉 Sedang Libur';
     return;
@@ -1522,21 +1551,7 @@ function exportWA(){
 }
 
 // ===================== NAV =====================
-function showPage(p, e){
-  document.querySelectorAll('.nav-btn').forEach(el=>el.classList.remove('active'));
-  if(e && e.target) e.target.classList.add('active');
 
-  const pages = document.querySelectorAll('.page');
-  const target = document.getElementById('page-'+p);
-
-  // Reset animasi dulu dengan remove active, lalu re-add
-  pages.forEach(el => el.classList.remove('active'));
-  void target.offsetWidth; // reflow biar animasi re-trigger
-  target.classList.add('active');
-
-  if(p==='dashboard') loadDashboard();
-  if(p==='rekap') loadRekap();
-}
 
 // ===================== TOAST =====================
 function showToast(msg,type=''){
@@ -1546,21 +1561,163 @@ function showToast(msg,type=''){
 }
 </script>
 <script>
+const PAGE_ORDER = ['absen','dashboard','rekap','izin'];
+let currentPageIndex = 0;
+
+function showPage(p, e){
+  document.querySelectorAll('.nav-btn').forEach(el=>el.classList.remove('active'));
+  if(e && e.target) e.target.classList.add('active');
+  const pages = document.querySelectorAll('.page');
+  const target = document.getElementById('page-'+p);
+  const newIndex = PAGE_ORDER.indexOf(p);
+  const goingRight = newIndex > currentPageIndex;
+  currentPageIndex = newIndex;
+  pages.forEach(el => el.classList.remove('active','slide-from-left','slide-from-right'));
+  target.classList.add(goingRight ? 'slide-from-right' : 'slide-from-left');
+  void target.offsetWidth;
+  target.classList.add('active');
+  // Position-aware animation
+  requestAnimationFrame(() => requestAnimationFrame(() => animatePage(target)));
+  if(p==='dashboard') loadDashboard();
+  if(p==='rekap') loadRekap();
+}
+
+
+// ── POSITION-AWARE PAGE ANIMATOR ──
+function animatePage(page) {
+  const children = Array.from(page.children);
+  const pageRect = page.getBoundingClientRect();
+  const pageH = pageRect.height || window.innerHeight;
+  const pageMidY = pageH * 0.35; // threshold: atas vs bawah
+  const pageMidX = window.innerWidth / 2;
+
+  // Track left/right columns per row — biar kiri masuk dulu, kanan nyusul
+  // Grup elemen per "baris" berdasarkan top position
+  const rowGroups = {};
+  children.forEach(el => {
+    const rect = el.getBoundingClientRect();
+    const rowKey = Math.round(rect.top / 10) * 10; // bucket per 10px
+    if (!rowGroups[rowKey]) rowGroups[rowKey] = [];
+    rowGroups[rowKey].push({ el, rect, rowKey });
+  });
+
+  // Sort rows top to bottom
+  const sortedRows = Object.keys(rowGroups).sort((a,b) => a - b);
+  const totalRows = sortedRows.length;
+
+  let globalDelay = 0;
+
+  sortedRows.forEach((rowKey, rowIdx) => {
+    const items = rowGroups[rowKey];
+    const rowFraction = rowIdx / Math.max(totalRows - 1, 1); // 0 = top, 1 = bottom
+
+    // Sort items within row left to right
+    items.sort((a, b) => a.rect.left - b.rect.left);
+
+    items.forEach((item, colIdx) => {
+      const { el, rect } = item;
+
+      // Remove old anim classes
+      el.classList.remove('anim-from-top','anim-from-bottom','anim-from-left','anim-from-right');
+      el.style.animationDelay = '';
+      void el.offsetWidth; // reflow
+
+      let animClass;
+      const elCenterX = rect.left + rect.width / 2;
+
+      if (rowFraction < 0.15) {
+        // Top zone → dari atas
+        animClass = 'anim-from-top';
+      } else if (rowFraction > 0.85) {
+        // Bottom zone → dari bawah
+        animClass = 'anim-from-bottom';
+      } else {
+        // Middle zone → kiri dari kiri, kanan dari kanan
+        animClass = elCenterX < pageMidX ? 'anim-from-left' : 'anim-from-right';
+      }
+
+      // Delay: rows berurutan dari atas ke bawah
+      // Dalam satu row: kiri masuk dulu, kanan nyusul 120ms
+      const rowDelay = rowIdx * 0.13;
+      const colDelay = colIdx * 0.12;
+      const totalDelay = rowDelay + colDelay;
+
+      el.style.animationDelay = totalDelay + 's';
+      el.classList.add(animClass);
+    });
+  });
+}
+
 function enterApp() {
   const ws = document.getElementById('welcome-screen');
+  const ov = document.getElementById('cinematic-overlay');
+  const cinText = document.getElementById('cin-text');
+  const cinBar  = document.getElementById('cin-bar');
+  const cinBar2 = document.getElementById('cin-bar2');
+
   ws.classList.add('hide');
-  setTimeout(function() {
+
+  // Langsung tampilkan overlay HITAM dulu sebelum welcome selesai exit
+  ov.style.transition = 'none';
+  ov.style.opacity = '1';
+  ov.classList.add('active');
+
+  // Sembunyiin nav & page sampai overlay siap
+  document.getElementById('mainNav').style.visibility = 'hidden';
+  document.querySelectorAll('.page').forEach(p => p.style.visibility = 'hidden');
+
+  // Bars expand
+  setTimeout(() => {
+    cinBar.style.transition  = 'width 1.3s cubic-bezier(0.16,1,0.3,1), opacity 0.5s ease';
+    cinBar2.style.transition = 'width 1.3s cubic-bezier(0.16,1,0.3,1), opacity 0.5s ease';
+    cinBar.style.opacity  = '1'; cinBar.style.width  = 'min(300px, 72vw)';
+    cinBar2.style.opacity = '1'; cinBar2.style.width = 'min(300px, 72vw)';
+  }, 950);
+
+  // Teks muncul
+  setTimeout(() => {
+    cinText.style.transition = 'opacity 0.9s ease, transform 1.1s cubic-bezier(0.16,1,0.3,1)';
+    cinText.style.opacity = '1';
+    cinText.style.transform = 'translateY(0)';
+  }, 1400);
+
+  // Teks & bars exit dramatis
+  setTimeout(() => {
+    cinText.style.transition = 'opacity 0.8s ease, transform 1.1s cubic-bezier(0.4,0,1,1), filter 0.8s ease';
+    cinText.style.opacity = '0';
+    cinText.style.transform = 'translateY(-55px) scale(1.12)';
+    cinText.style.filter = 'blur(14px)';
+    cinBar.style.transition  = 'width 0.8s ease, opacity 0.7s ease';
+    cinBar2.style.transition = 'width 0.8s ease, opacity 0.7s ease';
+    cinBar.style.width  = '0px'; cinBar.style.opacity  = '0';
+    cinBar2.style.width = '0px'; cinBar2.style.opacity = '0';
+  }, 3600);
+
+  // Overlay fade out, app build masuk
+  setTimeout(() => {
+    ov.style.transition = 'opacity 0.9s ease';
+    ov.style.opacity = '0';
     ws.style.display = 'none';
-    // Tampilkan nav
+
+    // Tampilkan nav & page tepat saat overlay mulai fade
+    document.getElementById('mainNav').style.visibility = 'visible';
     document.getElementById('mainNav').style.display = 'flex';
-    // Re-trigger animasi page absen dengan reset class active
+    document.querySelectorAll('.page').forEach(p => p.style.visibility = 'visible');
+
     const activePage = document.querySelector('.page.active');
     if (activePage) {
-      activePage.classList.remove('active');
-      void activePage.offsetWidth; // reflow trigger
+      activePage.classList.remove('active','slide-from-left','slide-from-right');
+      void activePage.offsetWidth;
       activePage.classList.add('active');
+      // Jalankan setelah display:block ter-render
+      requestAnimationFrame(() => requestAnimationFrame(() => animatePage(activePage)));
     }
-  }, 480);
+  }, 4200);
+
+  setTimeout(() => {
+    ov.classList.remove('active');
+    ov.style.pointerEvents = 'none';
+  }, 5200);
 }
 </script>
 </body>
