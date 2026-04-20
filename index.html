@@ -452,6 +452,35 @@
   }
   .wlc-btn:active { transform: scale(0.94); box-shadow: 0 0 0 4px rgba(59,130,246,0.2); }
 
+  /* ── DESKTOP RESPONSIVE ── */
+  @media (min-width: 768px) {
+    .nav { max-width: 700px; margin: 0 auto; border-radius: 0 0 14px 14px; border: 1px solid var(--border); border-top: none; }
+    .nav-btn { padding: 16px 8px; font-size: 14px; }
+    .page { max-width: 680px; padding: 1.75rem 1.5rem 5rem; }
+
+    /* Welcome */
+    .wlc-inner { max-width: 600px; padding: 64px 48px; }
+    .wlc-logo-img { width: 200px; }
+    .wlc-eyebrow { font-size: 18px; letter-spacing: 6px; }
+    .wlc-h1 { font-size: 52px; }
+    .wlc-sub { font-size: 15px; margin-bottom: 48px; }
+    .wlc-btn { padding: 16px 80px; font-size: 15px; letter-spacing: 3px; border-radius: 10px; }
+    .wlc-hint { font-size: 13px; }
+
+    /* Teks peringatan cinematic */
+    .cinematic-text { font-size: 22px !important; letter-spacing: 10px; }
+    .cinematic-bar { height: 2px; }
+  }
+
+  @media (min-width: 1100px) {
+    .nav { max-width: 820px; }
+    .page { max-width: 800px; }
+    .wlc-inner { max-width: 700px; }
+    .wlc-h1 { font-size: 64px; }
+    .wlc-btn { padding: 18px 120px; font-size: 16px; }
+    .cinematic-text { font-size: 28px !important; letter-spacing: 12px; }
+  }
+
 </style>
 </head>
 <body>
