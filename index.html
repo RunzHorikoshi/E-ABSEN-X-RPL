@@ -550,7 +550,7 @@
   <div class="window-row">
     <div class="window-card">
       <div class="window-label">Absen Masuk</div>
-      <div class="window-time">05:40 – 09:30</div>
+      <div class="window-time">05:40 – 10:30</div>
       <div class="window-status" id="winMasukStatus">—</div>
     </div>
     <div class="window-card">
@@ -586,7 +586,7 @@
     <button class="absen-btn masuk" id="btnMasuk" onclick="triggerAbsen('masuk')" disabled>
       <span class="btn-icon">✅</span>
       <span class="btn-label">Absen Masuk</span>
-      <span class="btn-sub">05:40 – 09:30</span>
+      <span class="btn-sub">05:40 – 10:30</span>
     </button>
     <button class="absen-btn pulang" id="btnPulang" onclick="triggerAbsen('pulang')" disabled>
       <span class="btn-icon">🏠</span>
@@ -929,8 +929,8 @@ function updateWindowStatus(d){
     wm.textContent='Libur'; wm.className='window-status closed';
   }
   else {
-    if(wmTime) wmTime.textContent='05:40 – 09:30';
-    if(inWindow('05:40','09:30',d)){ wm.textContent='Sedang buka'; wm.className='window-status open'; }
+    if(wmTime) wmTime.textContent='05:40 – 10:30';
+    if(inWindow('05:40','10:30',d)){ wm.textContent='Sedang buka'; wm.className='window-status open'; }
     else { wm.textContent=nowMin(d)<parseMin('05:40')?'Belum buka':'Sudah tutup'; wm.className='window-status closed'; }
   }
 
@@ -996,7 +996,7 @@ function updateButtons(d){
   }
 
   if(sudahM){ bm.disabled=true; bm.className='absen-btn masuk done'; bm.querySelector('.btn-label').textContent='Sudah Absen ✓'; }
-  else { bm.disabled=!(valid&&gpsOk&&inWindow('05:40','09:30',d)&&!!nama); bm.className='absen-btn masuk'; bm.querySelector('.btn-label').textContent='Absen Masuk'; }
+  else { bm.disabled=!(valid&&gpsOk&&inWindow('05:40','10:30',d)&&!!nama); bm.className='absen-btn masuk'; bm.querySelector('.btn-label').textContent='Absen Masuk'; }
 
   if(sudahP){ bp.disabled=true; bp.className='absen-btn pulang done-pulang'; bp.querySelector('.btn-label').textContent='Sudah Absen ✓'; }
   else {
