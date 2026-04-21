@@ -1372,20 +1372,27 @@ async function loadTodayLog(){
   const today = new Date().toISOString().slice(0,10);
   const q = query(window._col, where('tanggal','==',today));
   const snap = await getDocs(q);
-  todayLogs = snap.docs.map(d=>d.data()).sort((a,b)=>a.waktu.localeCompare(b.waktu));
+  // FIX: sort aman — waktu '—' (pulang/izin) diletakkan di akhir
+  todayLogs = snap.docs.map(d=>d.data()).sort((a,b)=>{
+    const wa = a.waktu==='—'?'99:99':a.waktu;
+    const wb = b.waktu==='—'?'99:99':b.waktu;
+    return wa.localeCompare(wb);
+  });
   renderTodayLog();
 }
 
 function renderTodayLog(){
   const wrap=document.getElementById('logWrap');
   if(!todayLogs.length){ wrap.innerHTML='<div class="empty-state">Belum ada absensi hari ini</div>'; return; }
-  const masukLogs = todayLogs.filter(l=>l.tipe==='masuk');
-  wrap.innerHTML = masukLogs.map(l=>`
+  // FIX: tampilkan masuk DAN pulang, exclude laporan-pancung
+  const visibleLogs = todayLogs.filter(l=>l.tipe==='masuk'||l.tipe==='pulang');
+  if(!visibleLogs.length){ wrap.innerHTML='<div class="empty-state">Belum ada absensi hari ini</div>'; return; }
+  wrap.innerHTML = visibleLogs.map(l=>`
     <div class="log-item">
       <div><div class="log-name">${l.nama}</div><div class="log-type">${l.tipe==='masuk'?'Absen Masuk':'Absen Pulang'}${l.keterangan?' · '+l.keterangan:''}</div></div>
       <div style="display:flex;align-items:center;gap:6px;">
         <span class="log-time">${l.waktu}</span>
-        <span class="log-badge badge-${l.status}">${l.status}</span>
+        <span class="log-badge badge-${l.status==='hadir'&&l.tipe==='pulang'?'pulang':l.status}">${l.tipe==='pulang'?'pulang':l.status}</span>
       </div>
     </div>`).join('');
 }
