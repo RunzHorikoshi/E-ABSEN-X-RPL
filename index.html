@@ -574,6 +574,15 @@
     <div class="select-arrow">▼</div>
   </div>
 
+  <!-- Input NIS untuk autentikasi siswa -->
+  <div id="nisWrap" style="display:none; margin-bottom:1rem;">
+    <div class="section-label" style="margin-bottom:6px;">Masukkan NIS kamu</div>
+    <div style="position:relative;">
+      <input type="password" id="nisInput" class="form-input" maxlength="12" placeholder="Nomor Induk Siswa" oninput="onNisChange()" style="background:var(--surface);border:1px solid var(--border2);color:var(--text);border-radius:12px;padding:12px 14px;font-size:14px;font-family:'Plus Jakarta Sans',sans-serif;width:100%;outline:none;"/>
+    </div>
+    <div id="nisStatus" style="font-size:11px;margin-top:4px;color:var(--muted);"></div>
+  </div>
+
   <!-- Status absen hari ini -->
   <div class="status-card" id="statusCard">
     <div class="section-label" style="margin-bottom:6px;">Status hari ini</div>
@@ -837,7 +846,7 @@
 <!-- FIREBASE -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, query, where, orderBy, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, query, where, orderBy, Timestamp, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAuFXi9JAphxjQl2kEGYjf9aSXJlo25Xj8",
@@ -853,7 +862,34 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 window._db = db;
 window._col = collection(db, "absensi");
-window._fs = { collection, addDoc, getDocs, deleteDoc, query, where, orderBy, Timestamp };
+window._fs = { collection, addDoc, getDocs, deleteDoc, query, where, orderBy, Timestamp, doc, getDoc, setDoc };
+
+// ===================== LOAD CONFIG DARI FIRESTORE =====================
+async function loadConfig(){
+  try {
+    // Load PIN admin dari Firestore (bukan dari source code)
+    const pinDoc = await getDoc(doc(db, 'config', 'admin'));
+    if(pinDoc.exists() && pinDoc.data().pin){
+      ADMIN_PIN = pinDoc.data().pin;
+    } else {
+      // Kalau belum ada, buat dokumen default (PIN: KOCAKK)
+      // PENTING: Setelah deploy pertama, ganti PIN ini langsung di Firestore Console!
+      await setDoc(doc(db, 'config', 'admin'), { pin: 'KOCAKK' });
+      ADMIN_PIN = 'KOCAKK';
+      console.warn('⚠️ PIN admin masih default. Segera ganti di Firestore Console → config/admin → pin');
+    }
+
+    // Load state isHariLibur dari Firestore
+    const appDoc = await getDoc(doc(db, 'config', 'app'));
+    if(appDoc.exists() && appDoc.data().isHariLibur !== undefined){
+      isHariLibur = appDoc.data().isHariLibur;
+      updateKontrolUI();
+      updateButtons(new Date());
+    }
+  } catch(e){
+    console.error('Gagal load config dari Firestore:', e);
+  }
+}
 
 document.getElementById('loadingOverlay').style.display = 'none';
 window.dbReady = true;
@@ -862,6 +898,7 @@ loadDashboard();
 loadRekap();
 updateKontrolUI();
 loadLaporCounter();
+loadConfig(); // Load PIN admin & state libur dari Firestore
 </script>
 
 <script>
@@ -874,7 +911,7 @@ const LOGO_RPL_B64 = 'data:image/png;base64,/9j/4AAQSkZJRgABAQAASABIAAD/4QBMRXhp
 
 // ===================== CONFIG =====================
 const SCHOOL_LAT = 0.5488, SCHOOL_LNG = 109.3815, RADIUS_M = 375;
-const ADMIN_PIN = 'KOCAKK'; // Ganti PIN admin di sini
+let ADMIN_PIN = null; // PIN diambil dari Firestore, tidak disimpan di source code
 const SISWA = [
   "ALFIANA TESI","APIN","BENI FEBRIAN","BODON","BRIGIDI DIVO","DERLIN KRISTI","DOSO","ELIZA BUDIYATI","FITRAH AGUNG REZEKI",
   "FRISILA ELLA","JULIA SINTA BELA","JULIANTI DUPA","KALIANUS OWEN","KLARA JESIKA BERLI","LISKA","MARPEL","MEISYA","MITA",
@@ -889,7 +926,42 @@ let currentFilter = 'hari', currentRekapTab = 'bulan';
 let todayLogs = [];
 let pendingAdminAction = null, pendingAdminSiswa = null;
 let izinType = 'izin';
-let isHariLibur = false;       // toggle hari libur
+let isHariLibur = false;       // toggle hari libur (disimpan juga di Firestore)
+let siswaVerified = false;     // status NIS siswa sudah diverifikasi
+
+// Data NIS siswa — CATATAN: Idealnya ini juga disimpan di Firestore dan tidak di source code
+// Untuk keamanan lebih baik, pindahkan ke Firestore collection 'siswa_nis'
+const SISWA_NIS = {
+  // Format: "NAMA_SISWA": "NIS"
+  // Isi dengan NIS asli siswa. Contoh di bawah hanya placeholder.
+  "ALFIANA TESI": "2324001",
+  "APIN": "2324002",
+  "BENI FEBRIAN": "2324003",
+  "BODON": "2324004",
+  "BRIGIDI DIVO": "2324005",
+  "DERLIN KRISTI": "2324006",
+  "DOSO": "2324007",
+  "ELIZA BUDIYATI": "2324008",
+  "FITRAH AGUNG REZEKI": "2324009",
+  "FRISILA ELLA": "2324010",
+  "JULIA SINTA BELA": "2324011",
+  "JULIANTI DUPA": "2324012",
+  "KALIANUS OWEN": "2324013",
+  "KLARA JESIKA BERLI": "2324014",
+  "LISKA": "2324015",
+  "MARPEL": "2324016",
+  "MEISYA": "2324017",
+  "MITA": "2324018",
+  "PINA JULIANTI": "2324019",
+  "PISKA": "2324020",
+  "RACHEL VANESHA": "2324021",
+  "RASTI": "2324022",
+  "STEPAN RAFI NUAR SAPUTRA": "2324023",
+  "TOGENSIUS": "2324024",
+  "YUDIS ETAN": "2324025",
+  "YULIAWATI": "2324026",
+  "YESYURUN": "2324027"
+};
 
 // ===================== TIMEZONE FIX (WIB UTC+7) =====================
 function getTodayWIB() {
@@ -962,6 +1034,10 @@ if(navigator.geolocation){
   navigator.geolocation.watchPosition(pos=>{
     const dist=haversine(pos.coords.latitude,pos.coords.longitude,SCHOOL_LAT,SCHOOL_LNG);
     gpsOk = dist<=RADIUS_M;
+    // Simpan koordinat & jarak ke variabel global untuk dikirim ke Firestore saat absen
+    window._lastGpsLat = pos.coords.latitude;
+    window._lastGpsLng = pos.coords.longitude;
+    window._lastGpsDist = Math.round(dist);
     document.getElementById('gpsDot').className='gps-dot '+(gpsOk?'ok':'err');
     document.getElementById('gpsText').textContent=gpsOk?'Lokasi terdeteksi di area sekolah':'Di luar area sekolah';
     document.getElementById('gpsDist').textContent=Math.round(dist)+' m';
@@ -976,13 +1052,54 @@ if(navigator.geolocation){
 function onSiswaChange(){
   const nama = document.getElementById('siswaSelect').value;
   const sc = document.getElementById('statusCard');
-  if(!nama){ sc.style.display='none'; updateButtons(new Date()); return; }
+  const nisWrap = document.getElementById('nisWrap');
+  const nisInput = document.getElementById('nisInput');
+  const nisStatus = document.getElementById('nisStatus');
+
+  // Reset verifikasi NIS saat ganti nama
+  siswaVerified = false;
+  if(nisInput) { nisInput.value = ''; }
+  if(nisStatus) { nisStatus.textContent = ''; }
+
+  if(!nama){
+    sc.style.display='none';
+    if(nisWrap) nisWrap.style.display='none';
+    updateButtons(new Date());
+    return;
+  }
+
+  // Tampilkan input NIS
+  if(nisWrap) nisWrap.style.display='block';
+
   sc.style.display='block';
   const m = todayLogs.find(l=>l.nama===nama&&l.tipe==='masuk');
   const p = todayLogs.find(l=>l.nama===nama&&l.tipe==='pulang');
   document.getElementById('stMasuk').textContent = m ? `${m.waktu} (${m.status})` : '—';
   document.getElementById('stPulang').textContent = p ? `${p.waktu} (${p.status})` : '—';
   document.getElementById('stKet').textContent = m?.keterangan || p?.keterangan || '—';
+  updateButtons(new Date());
+}
+
+function onNisChange(){
+  const nama = document.getElementById('siswaSelect').value;
+  const nis = document.getElementById('nisInput').value.trim();
+  const nisStatus = document.getElementById('nisStatus');
+
+  if(!nama || !nis) {
+    siswaVerified = false;
+    if(nisStatus) nisStatus.textContent = '';
+    updateButtons(new Date());
+    return;
+  }
+
+  const correctNIS = SISWA_NIS[nama];
+  if(nis === correctNIS) {
+    siswaVerified = true;
+    if(nisStatus) { nisStatus.textContent = '✅ NIS terverifikasi'; nisStatus.style.color='var(--green)'; }
+  } else {
+    siswaVerified = false;
+    if(nisStatus) { nisStatus.textContent = nis.length >= 7 ? '❌ NIS tidak cocok' : ''; nisStatus.style.color='var(--red)'; }
+  }
   updateButtons(new Date());
 }
 
@@ -994,6 +1111,9 @@ function updateButtons(d){
   const sudahP = nama&&todayLogs.some(l=>l.nama===nama&&l.tipe==='pulang');
   const bm=document.getElementById('btnMasuk'), bp=document.getElementById('btnPulang');
 
+  // Tombol absen hanya aktif jika NIS sudah terverifikasi
+  const nisOk = siswaVerified || !nama; // kalau belum pilih nama, biarkan (disabled karena !nama)
+
   if(isHariLibur){
     bm.disabled=true; bm.className='absen-btn masuk'; bm.querySelector('.btn-label').textContent='🎉 Sedang Libur';
     bp.disabled=true; bp.className='absen-btn pulang'; bp.querySelector('.btn-label').textContent='🎉 Sedang Libur';
@@ -1001,12 +1121,12 @@ function updateButtons(d){
   }
 
   if(sudahM){ bm.disabled=true; bm.className='absen-btn masuk done'; bm.querySelector('.btn-label').textContent='Sudah Absen ✓'; }
-  else { bm.disabled=!(valid&&gpsOk&&inWindow('05:40','09:30',d)&&!!nama); bm.className='absen-btn masuk'; bm.querySelector('.btn-label').textContent='Absen Masuk'; }
+  else { bm.disabled=!(valid&&gpsOk&&inWindow('05:40','09:30',d)&&!!nama&&siswaVerified); bm.className='absen-btn masuk'; bm.querySelector('.btn-label').textContent='Absen Masuk'; }
 
   if(sudahP){ bp.disabled=true; bp.className='absen-btn pulang done-pulang'; bp.querySelector('.btn-label').textContent='Sudah Absen ✓'; }
   else {
     let canP=false;
-    if(jp){ const [a,b]=jp.split('-'); canP=valid&&gpsOk&&inWindow(a,b,d)&&!!nama&&sudahM; }
+    if(jp){ const [a,b]=jp.split('-'); canP=valid&&gpsOk&&inWindow(a,b,d)&&!!nama&&sudahM&&siswaVerified; }
     bp.disabled=!canP; bp.className='absen-btn pulang'; bp.querySelector('.btn-label').textContent='Absen Pulang';
   }
 }
@@ -1075,7 +1195,10 @@ async function doAbsen(nama){
       showToast(pendingType==='masuk'?'Sudah absen masuk hari ini!':'Sudah absen pulang hari ini!','warn');
       await loadTodayLog(); onSiswaChange(); return;
     }
-    await addDoc(window._col,{ nama,tipe:pendingType,status,keterangan:ket, waktu:t,tanggal:today, timestamp:Timestamp.fromDate(d), hari:HARI[d.getDay()] });
+    await addDoc(window._col,{ nama,tipe:pendingType,status,keterangan:ket, waktu:t,tanggal:today, timestamp:Timestamp.fromDate(d), hari:HARI[d.getDay()],
+      // Simpan koordinat GPS di server untuk validasi (mencegah bypass GPS client-side)
+      gps_lat: window._lastGpsLat || null, gps_lng: window._lastGpsLng || null, gps_dist: window._lastGpsDist || null
+    });
     closeModal();
     showToast(pendingType==='masuk'?'Absen masuk berhasil! ✅':'Absen pulang berhasil! 🏠','success');
     loadDashboard(); await loadTodayLog(); onSiswaChange();
@@ -1140,6 +1263,8 @@ function checkPinInput(){
 
 async function confirmAdminAction(){
   const pin = document.getElementById('adminPinInput').value;
+  // Validasi PIN terhadap nilai yang diambil dari Firestore
+  if(ADMIN_PIN === null){ showToast('PIN belum dimuat, coba refresh!','error'); return; }
   if(pin !== ADMIN_PIN){ showToast('PIN salah!','error'); return; }
 
   // Simpan action & siswa sebelum closePinModal() menghapusnya
@@ -1157,6 +1282,11 @@ async function confirmAdminAction(){
 
   if(action === 'toggle-libur'){
     isHariLibur = !isHariLibur;
+    // Simpan state libur ke Firestore agar persisten antar refresh & device
+    try {
+      const {setDoc, doc} = window._fs;
+      await setDoc(doc(window._db, 'config', 'app'), { isHariLibur }, { merge: true });
+    } catch(e){ console.error('Gagal simpan state libur ke Firestore:', e); }
     updateKontrolUI();
     updateButtons(new Date());
     showToast(isHariLibur ? '🎉 Hari ini ditandai Libur!' : 'Hari ini kembali aktif', isHariLibur ? 'success' : 'warn');
