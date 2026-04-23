@@ -266,6 +266,24 @@
   .siswa-checkbox-item label { font-size: 12px; font-weight: 600; cursor: pointer; flex: 1; }
   .siswa-checkbox-item .siswa-existing-badge { font-size: 10px; padding: 1px 6px; border-radius: 5px; font-weight: 600; }
 
+  /* AUDIT PANEL */
+  .audit-siswa-block { background: var(--surface2); border-radius: 10px; padding: 10px; margin-bottom: 8px; border: 1px solid var(--border); }
+  .audit-siswa-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .audit-siswa-name { font-size: 13px; font-weight: 700; }
+  .audit-siswa-count { font-size: 11px; font-family: 'DM Mono', monospace; }
+  .audit-record-item { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 11px; gap: 6px; }
+  .audit-record-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .audit-record-left { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+  .audit-record-tanggal { font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 600; }
+  .audit-record-detail { font-size: 10px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .audit-del-btn { background: var(--red-bg); border: 1px solid var(--red-border); color: var(--red); border-radius: 6px; padding: 3px 8px; font-size: 10px; font-weight: 700; cursor: pointer; white-space: nowrap; font-family: 'Plus Jakarta Sans', sans-serif; transition: background 0.15s; flex-shrink: 0; }
+  .audit-del-btn:hover { background: rgba(239,68,68,0.25); }
+  .audit-duplikat-banner { background: var(--red-bg); border: 1px solid var(--red-border); border-radius: 8px; padding: 8px 10px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
+  .audit-duplikat-text { font-size: 11px; color: var(--red); font-weight: 600; }
+  .audit-fix-btn { background: var(--red); color: #fff; border: none; border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif; }
+  .audit-summary-ok { text-align: center; padding: 1rem; color: var(--green); font-size: 13px; font-weight: 600; }
+  .audit-loading { text-align: center; padding: 1rem; color: var(--muted); font-size: 12px; }
+
   .admin-section { background: var(--surface); border: 1px solid var(--orange-border); border-radius: 12px; padding: 14px; margin-bottom: 1rem; }
   .admin-section-title { font-size: 12px; font-weight: 700; color: var(--orange); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
   .admin-select { width: 100%; background: var(--surface2); border: 1px solid var(--border2); color: var(--text); border-radius: 10px; padding: 10px 12px; font-size: 13px; font-family: 'Plus Jakarta Sans', sans-serif; appearance: none; outline: none; margin-bottom: 8px; }
@@ -790,6 +808,44 @@
     <button class="admin-action-btn alpha" style="width:100%;padding:12px;font-size:13px;" onclick="adminEditByTanggal()">💾 Simpan Absen ke Tanggal Dipilih</button>
   </div>
 
+  <!-- ADMIN PANEL: AUDIT & CLEANER -->
+  <div class="admin-section" style="border-color:var(--red-border);margin-top:0;">
+    <div class="admin-section-title" style="color:var(--red);">🔍 Audit & Cleaner <span class="admin-badge" style="background:var(--red-bg);border-color:var(--red-border);color:var(--red);">ADMIN ONLY</span></div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Deteksi duplikat & lihat semua record per siswa. Hapus yang salah langsung dari sini.</div>
+
+    <!-- Pilih siswa untuk audit -->
+    <div style="margin-bottom:8px;">
+      <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Pilih Siswa</div>
+      <div class="select-wrap" style="margin-bottom:0;">
+        <select class="admin-select" id="auditSiswaSelect" onchange="auditSiswaChange()">
+          <option value="">-- Pilih siswa untuk diaudit --</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+      <button class="admin-action-btn" style="border-color:var(--accent);color:var(--accent);" onclick="runAuditSiswa()">🔍 Audit Siswa Ini</button>
+      <button class="admin-action-btn" style="border-color:var(--red-border);color:var(--red);" onclick="runAuditSemua()">⚡ Audit Semua</button>
+    </div>
+
+    <div id="auditResultWrap" style="margin-top:4px;"></div>
+  </div>
+
+  <!-- ADMIN PANEL: HAPUS BY TANGGAL -->
+  <div class="admin-section" style="border-color:var(--red-border);margin-top:0;">
+    <div class="admin-section-title" style="color:var(--red);">🗑️ Hapus Semua Record by Tanggal <span class="admin-badge" style="background:var(--red-bg);border-color:var(--red-border);color:var(--red);">ADMIN ONLY</span></div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Hapus semua absensi di tanggal tertentu — cocok buat bersihin data weekend atau tanggal salah input.</div>
+
+    <div style="margin-bottom:8px;">
+      <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Pilih Tanggal yang mau dihapus</div>
+      <input type="date" id="hapusTanggalInput" class="admin-select" style="cursor:pointer;"/>
+    </div>
+
+    <button class="admin-action-btn" style="width:100%;padding:12px;font-size:13px;border-color:var(--red-border);color:var(--red);" onclick="previewHapusByTanggal()">🔍 Preview & Hapus Record Tanggal Ini</button>
+
+    <div id="hapusTanggalPreview" style="margin-top:10px;"></div>
+  </div>
+
   <!-- KONTROL HARI INI -->
   <div class="kontrol-section">
     <div class="kontrol-title">⚙️ Kontrol Hari Ini <span class="admin-badge">ADMIN ONLY</span></div>
@@ -1071,11 +1127,12 @@ function getTodayWIB() {
 // ===================== INIT SISWA =====================
 const sel = document.getElementById('siswaSelect');
 const adminSel = document.getElementById('adminSiswaSelect');
+const auditSel = document.getElementById('auditSiswaSelect');
 const izinSel = document.getElementById('izinSiswaSelect');
 const laporPelaporSel = document.getElementById('laporPelaporSelect');
 const laporTargetSel = document.getElementById('laporTargetSelect');
 SISWA.forEach(n => {
-  [sel, adminSel, izinSel, laporPelaporSel, laporTargetSel].forEach(s => {
+  [sel, adminSel, auditSel, izinSel, laporPelaporSel, laporTargetSel].forEach(s => {
     const o = document.createElement('option'); o.value = n; o.textContent = n; s.appendChild(o);
   });
 });
@@ -1471,6 +1528,21 @@ async function confirmAdminAction(){
       showToast(`${deleted} record ${nama} hari ini berhasil dihapus!`,'success');
       await loadTodayLog(); loadDashboard();
     } catch(e){ console.error(e); showToast('Gagal hapus record','error'); }
+  }
+
+  if(action === 'hapus-by-tanggal'){
+    const tanggal = siswa; // siswa field dipakai untuk simpan tanggal
+    const docs = window._hapusTanggalDocs || [];
+    const {deleteDoc} = window._fs;
+    let berhasil = 0;
+    for(const docSnap of docs){
+      try { await deleteDoc(docSnap.ref); berhasil++; } catch(e){ console.error(e); }
+    }
+    showToast(`✅ ${berhasil} record tanggal ${tanggal} berhasil dihapus!`, 'success');
+    document.getElementById('hapusTanggalPreview').innerHTML =
+      `<div class="audit-summary-ok">✅ ${berhasil} record tanggal ${tanggal} sudah dihapus!</div>`;
+    window._hapusTanggalDocs = [];
+    await loadTodayLog(); loadDashboard(); loadRekap();
   }
 }
 
@@ -2081,6 +2153,237 @@ function exportCSV(){
 
 // ===================== NAV =====================
 
+
+// ===================== HAPUS BY TANGGAL =====================
+async function previewHapusByTanggal(){
+  if(!window.dbReady){ showToast('Database belum siap','error'); return; }
+  const tanggal = document.getElementById('hapusTanggalInput').value;
+  if(!tanggal){ showToast('Pilih tanggal dulu!','warn'); return; }
+
+  const wrap = document.getElementById('hapusTanggalPreview');
+  wrap.innerHTML = '<div class="audit-loading">⏳ Mengambil data...</div>';
+
+  const {getDocs, query, where} = window._fs;
+  const snap = await getDocs(query(window._col, where('tanggal','==',tanggal)));
+  const docs = snap.docs.filter(d => d.data().tipe === 'masuk' || d.data().tipe === 'pulang');
+
+  if(docs.length === 0){
+    wrap.innerHTML = '<div class="audit-summary-ok">✅ Tidak ada record di tanggal ini.</div>';
+    return;
+  }
+
+  // Grup per nama
+  const grouped = {};
+  docs.forEach(d => {
+    const data = d.data();
+    if(!grouped[data.nama]) grouped[data.nama] = [];
+    grouped[data.nama].push({ id: d.id, ref: d.ref, ...data });
+  });
+
+  const colorMap = {hadir:'var(--green)',alpha:'var(--red)',pancung:'var(--orange)',izin:'var(--yellow)',sakit:'var(--purple)'};
+  const hari = new Date(tanggal).toLocaleDateString('id-ID',{weekday:'long'});
+
+  let html = `<div style="background:var(--red-bg);border:1px solid var(--red-border);border-radius:10px;padding:10px;margin-bottom:8px;">
+    <div style="font-size:12px;font-weight:700;color:var(--red);margin-bottom:4px;">📅 ${hari}, ${tanggal} — ${docs.length} record ditemukan</div>
+    <div style="font-size:11px;color:var(--muted);">Semua record di bawah akan dihapus permanen.</div>
+  </div>`;
+
+  Object.entries(grouped).forEach(([nama, records]) => {
+    html += `<div class="audit-siswa-block" style="margin-bottom:6px;">
+      <div class="audit-siswa-header">
+        <span class="audit-siswa-name">${nama.toUpperCase()}</span>
+        <span class="audit-siswa-count">${records.length} record</span>
+      </div>`;
+    records.forEach(r => {
+      html += `<div class="audit-record-item">
+        <div class="audit-record-left">
+          <span class="audit-record-detail">
+            <span style="color:${colorMap[r.status]||'var(--muted)'};font-weight:700;">${(r.status||'?').toUpperCase()}</span>
+            · ${r.tipe} · ${r.waktu||'—'}
+          </span>
+        </div>
+      </div>`;
+    });
+    html += `</div>`;
+  });
+
+  html += `<button class="admin-action-btn" style="width:100%;padding:12px;font-size:13px;border-color:var(--red-border);color:var(--red);background:var(--red-bg);margin-top:4px;" 
+    onclick="eksekusiHapusByTanggal('${tanggal}')">
+    🗑️ HAPUS SEMUA ${docs.length} RECORD TANGGAL INI
+  </button>`;
+
+  wrap.innerHTML = html;
+  window._hapusTanggalDocs = docs;
+}
+
+async function eksekusiHapusByTanggal(tanggal){
+  const docs = window._hapusTanggalDocs || [];
+  if(docs.length === 0){ showToast('Tidak ada data','warn'); return; }
+  if(!confirm(`Yakin hapus SEMUA ${docs.length} record tanggal ${tanggal}? Ini tidak bisa dibatalkan!`)) return;
+
+  // Wajib PIN admin
+  pendingAdminAction = 'hapus-by-tanggal';
+  pendingAdminSiswa = tanggal;
+  showPinModal('hapus-by-tanggal', `untuk hapus semua record tanggal ${tanggal}`);
+}
+
+// ===================== AUDIT & CLEANER =====================
+function auditSiswaChange(){
+  document.getElementById('auditResultWrap').innerHTML = '';
+}
+
+async function runAuditSiswa(){
+  const nama = document.getElementById('auditSiswaSelect').value;
+  if(!nama){ showToast('Pilih siswa dulu!','warn'); return; }
+  await runAuditCore([nama]);
+}
+
+async function runAuditSemua(){
+  await runAuditCore(SISWA);
+}
+
+async function runAuditCore(namaDaftar){
+  if(!window.dbReady){ showToast('Database belum siap','error'); return; }
+  const wrap = document.getElementById('auditResultWrap');
+  wrap.innerHTML = '<div class="audit-loading">⏳ Mengambil data dari Firestore...</div>';
+
+  const {getDocs, query, where, orderBy} = window._fs;
+
+  // Ambil semua record tipe masuk untuk siswa yang dipilih
+  let allDocs = [];
+  // Firestore 'in' max 10, batch per 10
+  const batches = [];
+  for(let i = 0; i < namaDaftar.length; i += 10) batches.push(namaDaftar.slice(i, i+10));
+
+  for(const batch of batches){
+    try {
+      const snap = await getDocs(query(window._col,
+        where('nama', 'in', batch),
+        where('tipe', '==', 'masuk'),
+        orderBy('tanggal', 'asc')
+      ));
+      snap.docs.forEach(d => allDocs.push({ id: d.id, ref: d.ref, ...d.data() }));
+    } catch(e){ console.error(e); }
+  }
+
+  // Grup per nama → per tanggal
+  const grouped = {};
+  namaDaftar.forEach(n => { grouped[n] = {}; });
+  allDocs.forEach(doc => {
+    if(!grouped[doc.nama]) grouped[doc.nama] = {};
+    if(!grouped[doc.nama][doc.tanggal]) grouped[doc.nama][doc.tanggal] = [];
+    grouped[doc.nama][doc.tanggal].push(doc);
+  });
+
+  // Hitung duplikat
+  let totalDuplikat = 0;
+  const duplikatDocs = []; // semua doc yang bisa dihapus (keep pertama per tanggal)
+
+  namaDaftar.forEach(nama => {
+    Object.values(grouped[nama] || {}).forEach(records => {
+      if(records.length > 1){
+        totalDuplikat += records.length - 1;
+        // keep index 0 (paling awal), hapus sisanya
+        records.slice(1).forEach(r => duplikatDocs.push(r));
+      }
+    });
+  });
+
+  // Render hasil
+  let html = '';
+
+  if(totalDuplikat > 0){
+    html += `<div class="audit-duplikat-banner">
+      <span class="audit-duplikat-text">🚨 ${totalDuplikat} duplikat ditemukan!</span>
+      <button class="audit-fix-btn" onclick="fixSemuaDuplikat()">Hapus Semua Duplikat</button>
+    </div>`;
+    window._auditDuplikatDocs = duplikatDocs;
+  } else {
+    window._auditDuplikatDocs = [];
+  }
+
+  namaDaftar.forEach(nama => {
+    const tanggalMap = grouped[nama] || {};
+    const allTanggal = Object.keys(tanggalMap).sort();
+    if(allTanggal.length === 0) return;
+
+    const totalRecord = allTanggal.reduce((s, t) => s + tanggalMap[t].length, 0);
+    const dupCount = allTanggal.reduce((s, t) => s + Math.max(0, tanggalMap[t].length - 1), 0);
+
+    html += `<div class="audit-siswa-block">
+      <div class="audit-siswa-header">
+        <span class="audit-siswa-name">${nama.toUpperCase()}</span>
+        <span class="audit-siswa-count" style="color:${dupCount>0?'var(--red)':'var(--green)'};">
+          ${totalRecord} record${dupCount > 0 ? ` · ${dupCount} duplikat ⚠️` : ' · bersih ✅'}
+        </span>
+      </div>`;
+
+    allTanggal.forEach(tgl => {
+      const records = tanggalMap[tgl];
+      records.forEach((rec, idx) => {
+        const isDuplikat = idx > 0;
+        const colorMap = {hadir:'var(--green)',alpha:'var(--red)',pancung:'var(--orange)',izin:'var(--yellow)',sakit:'var(--purple)'};
+        const statusColor = colorMap[rec.status] || 'var(--muted)';
+        html += `<div class="audit-record-item" style="${isDuplikat ? 'background:rgba(239,68,68,0.06);border-radius:6px;padding:5px 6px;margin-top:2px;' : ''}">
+          <div class="audit-record-left">
+            <span class="audit-record-tanggal" style="color:${isDuplikat?'var(--red)':'var(--text)'};">
+              ${isDuplikat ? '⚠️ ' : ''}${tgl}
+            </span>
+            <span class="audit-record-detail">
+              <span style="color:${statusColor};font-weight:700;">${(rec.status||'?').toUpperCase()}</span>
+              · ${rec.waktu || '—'} · ${rec.keterangan || 'tanpa ket'}
+            </span>
+          </div>
+          <button class="audit-del-btn" onclick="hapusSingleRecord('${rec.id}', this)">🗑️ Hapus</button>
+        </div>`;
+      });
+    });
+
+    html += `</div>`;
+  });
+
+  if(!html) html = '<div class="audit-summary-ok">✅ Tidak ada data untuk ditampilkan.</div>';
+  if(totalDuplikat === 0 && namaDaftar.length > 1){
+    html += '<div class="audit-summary-ok">✅ Semua data bersih! Tidak ada duplikat.</div>';
+  }
+
+  wrap.innerHTML = html;
+}
+
+async function hapusSingleRecord(docId, btn){
+  if(!window.dbReady) return;
+  if(!confirm('Hapus record ini?')) return;
+  const {deleteDoc, doc} = window._fs;
+  try {
+    btn.disabled = true; btn.textContent = '...';
+    await deleteDoc(doc(window._db, 'absensi', docId));
+    btn.closest('.audit-record-item').style.opacity = '0.3';
+    btn.textContent = '✓';
+    showToast('Record berhasil dihapus!', 'success');
+    await loadTodayLog(); loadDashboard(); loadRekap();
+  } catch(e){
+    btn.disabled = false; btn.textContent = '🗑️ Hapus';
+    showToast('Gagal hapus record', 'error');
+  }
+}
+
+async function fixSemuaDuplikat(){
+  const docs = window._auditDuplikatDocs || [];
+  if(docs.length === 0){ showToast('Tidak ada duplikat', 'warn'); return; }
+  if(!confirm(`Hapus ${docs.length} record duplikat? Data asli (yang pertama per tanggal) tetap aman.`)) return;
+
+  const {deleteDoc} = window._fs;
+  let berhasil = 0;
+  for(const d of docs){
+    try { await deleteDoc(d.ref); berhasil++; } catch(e){ console.error(e); }
+  }
+  showToast(`${berhasil} duplikat berhasil dihapus!`, 'success');
+  await loadTodayLog(); loadDashboard(); loadRekap();
+  // Re-run audit untuk refresh tampilan
+  const namaDipilih = document.getElementById('auditSiswaSelect').value;
+  if(namaDipilih) await runAuditCore([namaDipilih]);
+  else await runAuditCore(SISWA);
+}
 
 // ===================== TOAST =====================
 function showToast(msg,type=''){
