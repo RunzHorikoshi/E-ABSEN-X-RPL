@@ -179,6 +179,48 @@
   .rekap-detail span { display: flex; align-items: center; gap: 4px; color: var(--muted); }
   .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
 
+  /* REKAP TABLE */
+  .rekap-table-wrap { overflow-x: auto; margin-bottom: 1rem; border-radius: 12px; border: 1px solid var(--border2); }
+  .rekap-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 420px; }
+  .rekap-table thead { background: var(--surface2); }
+  .rekap-table th { padding: 10px 8px; text-align: center; font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border2); white-space: nowrap; }
+  .rekap-table th:nth-child(2) { text-align: left; }
+  .rekap-table td { padding: 9px 8px; text-align: center; border-bottom: 1px solid var(--border); font-family: 'DM Mono', monospace; }
+  .rekap-table td:nth-child(2) { text-align: left; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600; font-size: 12px; }
+  .rekap-table td:last-child { text-align: left; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 11px; }
+  .rekap-table tr:last-child td { border-bottom: none; }
+  .rekap-table .total-row { background: var(--surface2); }
+  .rekap-table .total-row td { font-weight: 700; color: var(--text); border-top: 1px solid var(--border2); }
+  .rekap-table .num-hadir { color: var(--green); font-weight: 600; }
+  .rekap-table .num-izin { color: var(--yellow); font-weight: 600; }
+  .rekap-table .num-sakit { color: var(--purple); font-weight: 600; }
+  .rekap-table .num-alpha { color: var(--red); font-weight: 700; }
+  .rekap-table .num-pancung { color: var(--orange); font-weight: 700; }
+  .rekap-table .num-neutral { color: var(--muted); }
+  .ket-tag { display: inline-block; padding: 2px 7px; border-radius: 6px; font-size: 10px; font-weight: 600; font-family: 'Plus Jakarta Sans', sans-serif; white-space: nowrap; }
+  .ket-rajin { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .ket-alpha-parah { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+  .ket-alpha-ringan { background: rgba(239,68,68,0.07); color: var(--red); border: 1px solid rgba(239,68,68,0.2); }
+  .ket-pancung-parah { background: var(--orange-bg); color: var(--orange); border: 1px solid var(--orange-border); }
+  .ket-campuran { background: rgba(245,158,11,0.1); color: var(--yellow); border: 1px solid rgba(245,158,11,0.25); }
+  .ket-izin { background: var(--yellow-bg); color: var(--yellow); border: 1px solid var(--yellow-border); }
+  .ket-sakit { background: var(--purple-bg); color: var(--purple); border: 1px solid var(--purple-border); }
+  .ket-normal { background: var(--surface2); color: var(--muted); border: 1px solid var(--border2); }
+  /* KUALITAS KELAS */
+  .kelas-quality-card { background: var(--surface); border: 1px solid var(--border2); border-radius: 12px; padding: 14px; margin-bottom: 8px; }
+  .kelas-quality-title { font-size: 13px; font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .kelas-quality-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+  .kelas-quality-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .kelas-quality-key { color: var(--muted); }
+  .kelas-quality-val { font-weight: 700; font-family: 'DM Mono', monospace; font-size: 12px; }
+  .kelas-verdict { background: var(--surface); border-radius: 12px; padding: 14px; margin-bottom: 8px; border: 1px solid var(--border2); text-align: center; }
+  .kelas-verdict-icon { font-size: 32px; margin-bottom: 6px; }
+  .kelas-verdict-label { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .kelas-verdict-sub { font-size: 12px; color: var(--muted); }
+  .perlu-perhatian-list { margin-top: 4px; }
+  .perlu-perhatian-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+  .perlu-perhatian-item:last-child { border-bottom: none; }
+
   .date-filter { display: flex; gap: 8px; margin-bottom: 1rem; }
   .date-filter input { flex: 1; background: var(--surface); border: 1px solid var(--border2); color: var(--text); border-radius: 10px; padding: 8px 12px; font-size: 13px; font-family: 'Plus Jakarta Sans', sans-serif; outline: none; }
   .date-filter input:focus { border-color: var(--accent); }
@@ -212,6 +254,18 @@
   .admin-badge { display: inline-flex; align-items: center; gap: 4px; background: var(--orange-bg); border: 1px solid var(--orange-border); color: var(--orange); font-size: 10px; font-weight: 600; border-radius: 6px; padding: 2px 8px; font-family: 'DM Mono', monospace; margin-left: 6px; }
 
   /* ADMIN PANEL in dashboard */
+  /* ADMIN EDIT BY TANGGAL */
+  .tanggal-status-btn { padding: 7px 4px; border-radius: 8px; border: 1px solid var(--border2); background: var(--surface2); color: var(--muted); font-size: 11px; font-weight: 600; cursor: pointer; text-align: center; font-family: 'Plus Jakarta Sans', sans-serif; transition: all 0.15s; }
+  .tanggal-status-btn.selected { background: var(--red-bg); border-color: var(--red); color: var(--red); }
+  .tanggal-status-btn[data-s="pancung"].selected { background: var(--orange-bg); border-color: var(--orange); color: var(--orange); }
+  .tanggal-status-btn[data-s="izin"].selected { background: var(--yellow-bg); border-color: var(--yellow); color: var(--yellow); }
+  .tanggal-status-btn[data-s="sakit"].selected { background: var(--purple-bg); border-color: var(--purple); color: var(--purple); }
+  .siswa-checkbox-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 8px; cursor: pointer; transition: background 0.1s; }
+  .siswa-checkbox-item:hover { background: var(--surface); }
+  .siswa-checkbox-item input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px; cursor: pointer; flex-shrink: 0; }
+  .siswa-checkbox-item label { font-size: 12px; font-weight: 600; cursor: pointer; flex: 1; }
+  .siswa-checkbox-item .siswa-existing-badge { font-size: 10px; padding: 1px 6px; border-radius: 5px; font-weight: 600; }
+
   .admin-section { background: var(--surface); border: 1px solid var(--orange-border); border-radius: 12px; padding: 14px; margin-bottom: 1rem; }
   .admin-section-title { font-size: 12px; font-weight: 700; color: var(--orange); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
   .admin-select { width: 100%; background: var(--surface2); border: 1px solid var(--border2); color: var(--text); border-radius: 10px; padding: 10px 12px; font-size: 13px; font-family: 'Plus Jakarta Sans', sans-serif; appearance: none; outline: none; margin-bottom: 8px; }
@@ -550,7 +604,7 @@
   <div class="window-row">
     <div class="window-card">
       <div class="window-label">Absen Masuk</div>
-      <div class="window-time">05:40 – 12:30</div>
+      <div class="window-time">05:40 – 09:30</div>
       <div class="window-status" id="winMasukStatus">—</div>
     </div>
     <div class="window-card">
@@ -595,7 +649,7 @@
     <button class="absen-btn masuk" id="btnMasuk" onclick="triggerAbsen('masuk')" disabled>
       <span class="btn-icon">✅</span>
       <span class="btn-label">Absen Masuk</span>
-      <span class="btn-sub">05:40 – 12:30</span>
+      <span class="btn-sub">05:40 – 09:30</span>
     </button>
     <button class="absen-btn pulang" id="btnPulang" onclick="triggerAbsen('pulang')" disabled>
       <span class="btn-icon">🏠</span>
@@ -697,6 +751,45 @@
     </div>
   </div>
 
+  <!-- ADMIN PANEL: EDIT ABSEN BY TANGGAL -->
+  <div class="admin-section" style="border-color:var(--purple-border);margin-top:0;">
+    <div class="admin-section-title" style="color:var(--purple);">📅 Edit Absen by Tanggal <span class="admin-badge" style="background:var(--purple-bg);border-color:var(--purple-border);color:var(--purple);">ADMIN ONLY</span></div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Buat alpha/pancung di tanggal tertentu — bisa pilih banyak siswa sekaligus.</div>
+
+    <!-- Pilih Tanggal -->
+    <div style="margin-bottom:8px;">
+      <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Tanggal</div>
+      <input type="date" id="adminTanggalInput" class="admin-select" style="cursor:pointer;"/>
+    </div>
+
+    <!-- Pilih Status -->
+    <div style="margin-bottom:8px;">
+      <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Status</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;">
+        <button class="tanggal-status-btn selected" data-s="alpha" onclick="selectTanggalStatus('alpha')">❌ Alpha</button>
+        <button class="tanggal-status-btn" data-s="pancung" onclick="selectTanggalStatus('pancung')">✂️ Pancung</button>
+        <button class="tanggal-status-btn" data-s="izin" onclick="selectTanggalStatus('izin')">📋 Izin</button>
+        <button class="tanggal-status-btn" data-s="sakit" onclick="selectTanggalStatus('sakit')">🤒 Sakit</button>
+      </div>
+    </div>
+
+    <!-- Pilih Siswa (multi-checkbox) -->
+    <div style="margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;">Pilih Siswa</div>
+        <div style="display:flex;gap:6px;">
+          <button onclick="toggleSelectAllSiswa(true)" style="font-size:10px;padding:2px 8px;border-radius:6px;border:1px solid var(--border2);background:var(--surface2);color:var(--muted);cursor:pointer;">Semua</button>
+          <button onclick="toggleSelectAllSiswa(false)" style="font-size:10px;padding:2px 8px;border-radius:6px;border:1px solid var(--border2);background:var(--surface2);color:var(--muted);cursor:pointer;">Reset</button>
+        </div>
+      </div>
+      <div id="siswaCheckboxList" style="background:var(--surface2);border-radius:10px;padding:6px;max-height:200px;overflow-y:auto;border:1px solid var(--border);"></div>
+    </div>
+
+    <div id="adminTanggalSelectedCount" style="font-size:11px;color:var(--muted);margin-bottom:8px;text-align:center;">0 siswa dipilih</div>
+
+    <button class="admin-action-btn alpha" style="width:100%;padding:12px;font-size:13px;" onclick="adminEditByTanggal()">💾 Simpan Absen ke Tanggal Dipilih</button>
+  </div>
+
   <!-- KONTROL HARI INI -->
   <div class="kontrol-section">
     <div class="kontrol-title">⚙️ Kontrol Hari Ini <span class="admin-badge">ADMIN ONLY</span></div>
@@ -742,6 +835,12 @@
   </div>
 
   <div id="rekapWrap"><div class="empty-state">Memuat rekap...</div></div>
+
+  <!-- KUALITAS KELAS -->
+  <div id="kelasQualityWrap" style="display:none; margin-top:1rem;">
+    <div class="section-label" style="margin-bottom:8px;">📊 Kualitas Kelas</div>
+    <div id="kelasQualityContent"></div>
+  </div>
 
   <button class="export-btn" onclick="exportCSV()">Export CSV</button>
   <button class="export-btn" onclick="exportWA()">Salin Rekap untuk WA</button>
@@ -898,6 +997,7 @@ loadDashboard();
 loadRekap();
 updateKontrolUI();
 loadLaporCounter();
+renderSiswaCheckboxes();
 loadConfig(); // Load PIN admin & state libur dari Firestore
 </script>
 
@@ -1006,8 +1106,8 @@ function updateWindowStatus(d){
     wm.textContent='Libur'; wm.className='window-status closed';
   }
   else {
-    if(wmTime) wmTime.textContent='05:40 – 12:30';
-    if(inWindow('05:40','12:30',d)){ wm.textContent='Sedang buka'; wm.className='window-status open'; }
+    if(wmTime) wmTime.textContent='05:40 – 09:30';
+    if(inWindow('05:40','09:30',d)){ wm.textContent='Sedang buka'; wm.className='window-status open'; }
     else { wm.textContent=nowMin(d)<parseMin('05:40')?'Belum buka':'Sudah tutup'; wm.className='window-status closed'; }
   }
 
@@ -1121,7 +1221,7 @@ function updateButtons(d){
   }
 
   if(sudahM){ bm.disabled=true; bm.className='absen-btn masuk done'; bm.querySelector('.btn-label').textContent='Sudah Absen ✓'; }
-  else { bm.disabled=!(valid&&gpsOk&&inWindow('05:40','12:30',d)&&!!nama&&siswaVerified); bm.className='absen-btn masuk'; bm.querySelector('.btn-label').textContent='Absen Masuk'; }
+  else { bm.disabled=!(valid&&gpsOk&&inWindow('05:40','09:30',d)&&!!nama&&siswaVerified); bm.className='absen-btn masuk'; bm.querySelector('.btn-label').textContent='Absen Masuk'; }
 
   if(sudahP){ bp.disabled=true; bp.className='absen-btn pulang done-pulang'; bp.querySelector('.btn-label').textContent='Sudah Absen ✓'; }
   else {
@@ -1325,6 +1425,35 @@ async function confirmAdminAction(){
     await loadTodayLog(); loadDashboard();
   }
 
+  if(action === 'edit-by-tanggal'){
+    const tanggal = document.getElementById('adminTanggalInput').value;
+    const siswaDipilih = siswa ? siswa.split(',') : [];
+    const {addDoc, getDocs, query, where, Timestamp} = window._fs;
+    const d = new Date();
+    const t = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    const hariIdx = new Date(tanggal).getDay();
+    let saved = 0, skipped = 0;
+    for(const nama of siswaDipilih){
+      const cekSnap = await getDocs(query(window._col, where('nama','==',nama), where('tanggal','==',tanggal), where('tipe','==','masuk')));
+      if(!cekSnap.empty){ skipped++; continue; }
+      try {
+        await addDoc(window._col,{
+          nama, tipe:'masuk', status: adminTanggalStatus,
+          keterangan:`Admin — ${adminTanggalStatus} (edit tanggal)`,
+          waktu: t, tanggal, timestamp: Timestamp.fromDate(d),
+          hari: HARI[hariIdx], byAdmin: true
+        });
+        saved++;
+      } catch(e){ console.error(e); }
+    }
+    let msg = `${saved} siswa berhasil dicatat ${adminTanggalStatus}!`;
+    if(skipped > 0) msg += ` ${skipped} dilewati (sudah ada record).`;
+    showToast(msg, 'success');
+    await loadTodayLog(); loadDashboard(); loadRekap();
+    await refreshExistingBadges();
+    return;
+  }
+
   if(action === 'hapus-record'){
     const nama = siswa;
     const {deleteDoc, getDocs: gd, query: q, where: w} = window._fs;
@@ -1355,6 +1484,90 @@ function adminHapusRecord(){
     `Hapus Semua Record ${nama} Hari Ini?`,
     `Semua record absen masuk & pulang ${nama} hari ini akan DIHAPUS permanen. Aksi ini tidak bisa dibatalkan!`,
     'alpha'
+  );
+}
+
+// ===================== ADMIN EDIT BY TANGGAL =====================
+let adminTanggalStatus = 'alpha';
+
+function selectTanggalStatus(s){
+  adminTanggalStatus = s;
+  document.querySelectorAll('.tanggal-status-btn').forEach(b => b.classList.remove('selected'));
+  document.querySelector(`.tanggal-status-btn[data-s="${s}"]`).classList.add('selected');
+}
+
+function renderSiswaCheckboxes(){
+  const wrap = document.getElementById('siswaCheckboxList');
+  if(!wrap) return;
+  wrap.innerHTML = SISWA.map((nama, i) => `
+    <div class="siswa-checkbox-item" onclick="toggleSiswaCheck(${i})">
+      <input type="checkbox" id="chk_siswa_${i}" value="${nama}" onchange="updateSelectedCount()"/>
+      <label for="chk_siswa_${i}">${nama.toUpperCase()}</label>
+      <span id="chk_exist_${i}" class="siswa-existing-badge" style="display:none;"></span>
+    </div>`).join('');
+  updateSelectedCount();
+  // Set default tanggal = hari ini
+  const inp = document.getElementById('adminTanggalInput');
+  if(inp && !inp.value) inp.value = getTodayWIB();
+  // Listener: kalau tanggal berubah, refresh badge existing
+  inp.addEventListener('change', refreshExistingBadges);
+}
+
+function toggleSiswaCheck(i){
+  const cb = document.getElementById(`chk_siswa_${i}`);
+  if(cb){ cb.checked = !cb.checked; updateSelectedCount(); }
+}
+
+function updateSelectedCount(){
+  const checked = document.querySelectorAll('#siswaCheckboxList input[type="checkbox"]:checked').length;
+  const el = document.getElementById('adminTanggalSelectedCount');
+  if(el) el.textContent = checked > 0 ? `${checked} siswa dipilih` : '0 siswa dipilih';
+}
+
+function toggleSelectAllSiswa(select){
+  document.querySelectorAll('#siswaCheckboxList input[type="checkbox"]').forEach(cb => cb.checked = select);
+  updateSelectedCount();
+}
+
+async function refreshExistingBadges(){
+  if(!window.dbReady) return;
+  const tanggal = document.getElementById('adminTanggalInput').value;
+  if(!tanggal) return;
+  const {getDocs, query, where} = window._fs;
+  const snap = await getDocs(query(window._col, where('tanggal','==',tanggal), where('tipe','==','masuk')));
+  const existingMap = {};
+  snap.docs.forEach(d => { existingMap[d.data().nama] = d.data().status; });
+  SISWA.forEach((nama, i) => {
+    const badge = document.getElementById(`chk_exist_${i}`);
+    if(!badge) return;
+    if(existingMap[nama]){
+      const s = existingMap[nama];
+      const colorMap = {hadir:'var(--green)',alpha:'var(--red)',pancung:'var(--orange)',izin:'var(--yellow)',sakit:'var(--purple)'};
+      badge.style.display = 'inline-block';
+      badge.style.background = colorMap[s] ? colorMap[s].replace('var(','').replace(')','') : 'transparent';
+      badge.style.color = '#fff';
+      badge.style.background = colorMap[s] || 'var(--muted)';
+      badge.textContent = s.toUpperCase();
+    } else {
+      badge.style.display = 'none';
+    }
+  });
+}
+
+async function adminEditByTanggal(){
+  const tanggal = document.getElementById('adminTanggalInput').value;
+  if(!tanggal){ showToast('Pilih tanggal dulu!','warn'); return; }
+  const checked = Array.from(document.querySelectorAll('#siswaCheckboxList input[type="checkbox"]:checked')).map(cb => cb.value);
+  if(checked.length === 0){ showToast('Pilih minimal 1 siswa!','warn'); return; }
+
+  const statusLabel = {alpha:'Alpha',pancung:'Pancung',izin:'Izin',sakit:'Sakit'}[adminTanggalStatus];
+  pendingAdminAction = 'edit-by-tanggal';
+  pendingAdminSiswa = checked.join(',');
+  showAdminConfirm(
+    adminTanggalStatus==='alpha'?'❌':adminTanggalStatus==='pancung'?'✂️':adminTanggalStatus==='izin'?'📋':'🤒',
+    `${statusLabel} ${checked.length} Siswa — ${tanggal}`,
+    `${checked.length} siswa akan dicatat "${statusLabel}" pada tanggal ${tanggal}. Jika sudah ada record di tanggal itu, akan dilewati.`,
+    adminTanggalStatus==='pancung'?'pancung':'alpha'
   );
 }
 
@@ -1642,35 +1855,148 @@ async function loadRekap(){
   });
 
   const wrap=document.getElementById('rekapWrap');
-  wrap.innerHTML = SISWA.map(nama=>{
-    const r=rekap[nama];
-    const total = r.hadir + r.izin + r.sakit + r.alpha + r.pancung || 1;
 
-    // Buat array pasangan [warna, nilai], urutkan dari terbesar ke terkecil
-    const bars = [
-      {cls:'bar-hadir', val:r.hadir},
-      {cls:'bar-izin', val:r.izin},
-      {cls:'bar-sakit', val:r.sakit},
-      {cls:'bar-alpha', val:r.alpha},
-      {cls:'bar-pancung', val:r.pancung},
-    ].filter(b=>b.val>0).sort((a,b)=>b.val-a.val);
+  // Fungsi keterangan otomatis
+  function getKeterangan(r) {
+    const totalAbsen = r.hadir + r.izin + r.sakit + r.alpha + r.pancung;
+    if (totalAbsen === 0) return {text:'Belum Ada Data', cls:'ket-normal'};
+    const totalNegatif = r.alpha + r.pancung;
+    // Rajin: hadir semua atau total negatif 0
+    if (r.alpha === 0 && r.pancung === 0 && r.hadir > 0) {
+      if (r.izin === 0 && r.sakit === 0) return {text:'⭐ Siswa Rajin', cls:'ket-rajin'};
+      if (r.izin > 0 || r.sakit > 0) return {text:'✅ Kehadiran Baik', cls:'ket-rajin'};
+    }
+    // Alpha & pancung parah: alpha >= 5 ATAU pancung >= 3
+    if (r.alpha >= 5 && r.pancung >= 3) return {text:'🚨 Alpha + Sering Pancung', cls:'ket-pancung-parah'};
+    if (r.alpha >= 5) return {text:'🚨 Sering Alpha', cls:'ket-alpha-parah'};
+    if (r.pancung >= 3) return {text:'✂️ Sering Pancung', cls:'ket-pancung-parah'};
+    // Alpha 1 minggu (alfa 5 hari = seminggu)
+    if (r.alpha >= 4 && r.pancung >= 1) return {text:'⚠️ Alpha + Pancung', cls:'ket-campuran'};
+    if (r.alpha >= 3 && r.alpha < 5) return {text:'⚠️ Mulai Sering Alpha', cls:'ket-alpha-ringan'};
+    if (r.alpha >= 1 && r.alpha < 3 && r.pancung >= 1) return {text:'⚠️ Ada Alpha & Pancung', cls:'ket-campuran'};
+    if (r.pancung >= 1 && r.pancung < 3) return {text:'✂️ Ada Pancung', cls:'ket-pancung-parah'};
+    if (r.alpha >= 1 && r.alpha < 3) return {text:'❌ Ada Alpha', cls:'ket-alpha-ringan'};
+    if (r.izin > 3) return {text:'📋 Sering Izin', cls:'ket-izin'};
+    if (r.sakit > 3) return {text:'🤒 Sering Sakit', cls:'ket-sakit'};
+    return {text:'✅ Kehadiran Normal', cls:'ket-normal'};
+  }
 
-    const barHTML = bars.map(b=>`<div class="${b.cls}" style="flex:${b.val}"></div>`).join('');
+  // Hitung total per kolom
+  let tHadir=0,tIzin=0,tSakit=0,tAlpha=0,tPancung=0,tTotal=0;
+  SISWA.forEach(n=>{
+    const r=rekap[n];
+    tHadir+=r.hadir; tIzin+=r.izin; tSakit+=r.sakit; tAlpha+=r.alpha; tPancung+=r.pancung; tTotal+=r.total;
+  });
 
-    return `<div class="rekap-item">
-      <div class="rekap-nama">${nama}</div>
-      <div class="rekap-bar" style="gap:0;">
-        ${barHTML}
-      </div>
-      <div class="rekap-detail">
-        <span><span class="dot" style="background:var(--green)"></span>Hadir: ${r.hadir}</span>
-        <span><span class="dot" style="background:var(--yellow)"></span>Izin: ${r.izin}</span>
-        <span><span class="dot" style="background:var(--purple)"></span>Sakit: ${r.sakit}</span>
-        <span><span class="dot" style="background:var(--red)"></span>Alpha: ${r.alpha}</span>
-        <span><span class="dot" style="background:var(--orange)"></span>Pancung: ${r.pancung}</span>
-      </div>
-    </div>`;
+  const rowsHTML = SISWA.map((nama, i) => {
+    const r = rekap[nama];
+    const ket = getKeterangan(r);
+    const namaUpper = nama.toUpperCase();
+    return `<tr>
+      <td class="num-neutral">${i+1}</td>
+      <td>${namaUpper}</td>
+      <td class="num-hadir">${r.hadir||'—'}</td>
+      <td class="num-izin">${r.izin||'—'}</td>
+      <td class="num-sakit">${r.sakit||'—'}</td>
+      <td class="num-alpha">${r.alpha||'—'}</td>
+      <td class="num-pancung">${r.pancung||'—'}</td>
+      <td class="num-neutral" style="font-weight:700;">${r.total}</td>
+      <td><span class="ket-tag ${ket.cls}">${ket.text}</span></td>
+    </tr>`;
   }).join('');
+
+  wrap.innerHTML = `<div class="rekap-table-wrap">
+    <table class="rekap-table">
+      <thead>
+        <tr>
+          <th>No</th>
+          <th>Nama Siswa</th>
+          <th>Hadir</th>
+          <th>Izin</th>
+          <th>Sakit</th>
+          <th>Alpha</th>
+          <th>Pancung</th>
+          <th>Total</th>
+          <th>Keterangan</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rowsHTML}
+        <tr class="total-row">
+          <td colspan="2" style="text-align:left;font-family:'Plus Jakarta Sans',sans-serif;">TOTAL KELAS</td>
+          <td class="num-hadir">${tHadir}</td>
+          <td class="num-izin">${tIzin}</td>
+          <td class="num-sakit">${tSakit}</td>
+          <td class="num-alpha">${tAlpha}</td>
+          <td class="num-pancung">${tPancung}</td>
+          <td>${tTotal}</td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>`;
+
+  // === KUALITAS KELAS ===
+  const totalSiswa = SISWA.length;
+  const siswaRajin = SISWA.filter(n => rekap[n].alpha === 0 && rekap[n].pancung === 0 && rekap[n].hadir > 0).length;
+  const siswaAlphaParah = SISWA.filter(n => rekap[n].alpha >= 5).length;
+  const siswaPancungParah = SISWA.filter(n => rekap[n].pancung >= 3).length;
+  const siswaPerluPerhatian = SISWA.filter(n => rekap[n].alpha >= 3 || rekap[n].pancung >= 2);
+  const rateKehadiran = totalSiswa > 0 ? Math.round((tHadir / (tHadir + tAlpha + tPancung + tIzin + tSakit)) * 100) : 0;
+
+  // Verdict kelas
+  let verdictIcon, verdictLabel, verdictSub, verdictColor;
+  if (rateKehadiran >= 90 && siswaAlphaParah === 0) {
+    verdictIcon = '🏆'; verdictLabel = 'Kelas Sangat Disiplin';
+    verdictSub = 'Tingkat kehadiran tinggi, minim pelanggaran!';
+    verdictColor = 'var(--green)';
+  } else if (rateKehadiran >= 75 && siswaAlphaParah <= 2) {
+    verdictIcon = '✅'; verdictLabel = 'Kelas Cukup Baik';
+    verdictSub = 'Kehadiran terjaga, ada beberapa yang perlu diperhatikan.';
+    verdictColor = 'var(--accent)';
+  } else if (siswaAlphaParah > 5 || siswaPancungParah > 3) {
+    verdictIcon = '🚨'; verdictLabel = 'Kelas Perlu Perhatian Serius';
+    verdictSub = 'Banyak siswa dengan alpha/pancung berlebihan.';
+    verdictColor = 'var(--red)';
+  } else {
+    verdictIcon = '⚠️'; verdictLabel = 'Kelas Perlu Diawasi';
+    verdictSub = 'Ada beberapa siswa yang mulai bermasalah dalam kehadiran.';
+    verdictColor = 'var(--yellow)';
+  }
+
+  const qualityWrap = document.getElementById('kelasQualityWrap');
+  const qualityContent = document.getElementById('kelasQualityContent');
+  qualityWrap.style.display = 'block';
+
+  const perluHTML = siswaPerluPerhatian.length > 0
+    ? siswaPerluPerhatian.map(n => {
+        const r = rekap[n];
+        const ket = getKeterangan(r);
+        return `<div class="perlu-perhatian-item">
+          <span style="font-weight:600;">${n.toUpperCase()}</span>
+          <span class="ket-tag ${ket.cls}">${ket.text}</span>
+        </div>`;
+      }).join('')
+    : `<div class="empty-state" style="padding:0.5rem 0;font-size:12px;">Semua siswa kehadirannya baik! 🎉</div>`;
+
+  qualityContent.innerHTML = `
+    <div class="kelas-verdict">
+      <div class="kelas-verdict-icon">${verdictIcon}</div>
+      <div class="kelas-verdict-label" style="color:${verdictColor};">${verdictLabel}</div>
+      <div class="kelas-verdict-sub">${verdictSub}</div>
+    </div>
+    <div class="kelas-quality-card">
+      <div class="kelas-quality-title">📈 Statistik Kelas</div>
+      <div class="kelas-quality-row"><span class="kelas-quality-key">Total Siswa</span><span class="kelas-quality-val">${totalSiswa} siswa</span></div>
+      <div class="kelas-quality-row"><span class="kelas-quality-key">Siswa Rajin (0 alpha/pancung)</span><span class="kelas-quality-val" style="color:var(--green);">${siswaRajin} siswa</span></div>
+      <div class="kelas-quality-row"><span class="kelas-quality-key">Rate Kehadiran Kelas</span><span class="kelas-quality-val" style="color:${rateKehadiran>=80?'var(--green)':rateKehadiran>=60?'var(--yellow)':'var(--red)'};">${rateKehadiran}%</span></div>
+      <div class="kelas-quality-row"><span class="kelas-quality-key">Siswa Sering Alpha (≥5x)</span><span class="kelas-quality-val" style="color:${siswaAlphaParah>0?'var(--red)':'var(--green)'};">${siswaAlphaParah} siswa</span></div>
+      <div class="kelas-quality-row"><span class="kelas-quality-key">Siswa Sering Pancung (≥3x)</span><span class="kelas-quality-val" style="color:${siswaPancungParah>0?'var(--orange)':'var(--green)'};">${siswaPancungParah} siswa</span></div>
+    </div>
+    <div class="kelas-quality-card">
+      <div class="kelas-quality-title">⚠️ Siswa Perlu Perhatian</div>
+      <div class="perlu-perhatian-list">${perluHTML}</div>
+    </div>`;
 
   window._rekapData = rekap;
   window._rekapRange = {dateFrom, dateTo};
@@ -1719,6 +2045,38 @@ function exportWA(){
   txt+=`_Dikirim via E-Absen Digital X RPL_`;
 
   navigator.clipboard.writeText(txt).then(()=>showToast('Rekap disalin! Paste ke WA','success'));
+}
+
+function exportCSV(){
+  if(!window._rekapData){ showToast('Load rekap dulu','warn'); return; }
+  const {dateFrom,dateTo}=window._rekapRange||{};
+
+  // Header CSV
+  let csv = 'No,Nama,Hadir,Izin,Sakit,Alpha,Pancung,Total\n';
+
+  SISWA.forEach((nama,i)=>{
+    const r=window._rekapData[nama];
+    csv += `${i+1},"${nama}",${r.hadir},${r.izin},${r.sakit},${r.alpha},${r.pancung},${r.total}\n`;
+  });
+
+  // Baris total kelas
+  let totalHadir=0,totalIzin=0,totalSakit=0,totalAlpha=0,totalPancung=0,totalAll=0;
+  SISWA.forEach(n=>{
+    const r=window._rekapData[n];
+    totalHadir+=r.hadir; totalIzin+=r.izin; totalSakit+=r.sakit;
+    totalAlpha+=r.alpha; totalPancung+=r.pancung; totalAll+=r.total;
+  });
+  csv += `,"TOTAL KELAS",${totalHadir},${totalIzin},${totalSakit},${totalAlpha},${totalPancung},${totalAll}\n`;
+
+  // Download file
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `Rekap_Absen_XRPL_${dateFrom}_sd_${dateTo}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('CSV berhasil didownload!','success');
 }
 
 // ===================== NAV =====================
