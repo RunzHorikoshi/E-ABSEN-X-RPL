@@ -340,35 +340,7 @@
   @keyframes spin { to { transform: rotate(360deg); } }
   .loading-text { font-size: 14px; color: var(--muted); }
 
-  /* ── SKELETON LOADING ── */
-  @keyframes shimmer {
-    0% { background-position: -400px 0; }
-    100% { background-position: 400px 0; }
-  }
-  .skeleton {
-    background: linear-gradient(90deg, var(--surface) 25%, var(--surface2) 50%, var(--surface) 75%);
-    background-size: 800px 100%;
-    animation: shimmer 1.4s infinite;
-    border-radius: 8px;
-  }
-  .skeleton-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; }
-  .skeleton-num { height: 28px; width: 48px; margin-bottom: 6px; }
-  .skeleton-lbl { height: 10px; width: 60%; }
-  .skeleton-row { height: 52px; border-radius: 10px; margin-bottom: 6px; }
-
   .divider { height: 1px; background: var(--border); margin: 1rem 0; }
-
-  /* ── UTILITY CLASSES (Tier 1 cleanup) ── */
-  .hidden { display: none; }
-  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; }
-  .mb-8 { margin-bottom: 8px; }
-  .mb-1r { margin-bottom: 1rem; }
-  .mb-10 { margin-bottom: 10px; }
-  .mt-8 { margin-top: 8px; }
-  .section-mini-label { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
-  .admin-hint { font-size: 11px; color: var(--muted); margin-bottom: 10px; }
-  .mini-btn { font-size: 10px; padding: 2px 8px; border-radius: 6px; border: 1px solid var(--border2); background: var(--surface2); color: var(--muted); cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif; }
   .tabs-inner { display: flex; gap: 6px; margin-bottom: 1rem; }
   .tab-inner { padding: 6px 14px; border-radius: 8px; border: 1px solid var(--border2); background: var(--surface); color: var(--muted); font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif; transition: all 0.15s; }
   .tab-inner.active { background: var(--surface2); color: var(--text); border-color: var(--border2); }
@@ -619,7 +591,7 @@
 </div>
 
 <!-- NAV -->
-<div class="nav hidden" id="mainNav">
+<div class="nav" id="mainNav" style="display:none;">
   <button class="nav-btn active" onclick="showPage('absen',event)">Absen</button>
   <button class="nav-btn" onclick="showPage('dashboard',event)">Dashboard</button>
   <button class="nav-btn" onclick="showPage('rekap',event)">Rekap</button>
@@ -675,7 +647,7 @@
   </div>
 
   <!-- Input NIS untuk autentikasi siswa -->
-  <div id="nisWrap" class="hidden mb-1r">
+  <div id="nisWrap" style="display:none; margin-bottom:1rem;">
     <div class="section-label" style="margin-bottom:6px;">Masukkan NIS kamu</div>
     <div style="position:relative;">
       <input type="password" id="nisInput" class="form-input" maxlength="12" placeholder="Nomor Induk Siswa" oninput="onNisChange()" style="background:var(--surface);border:1px solid var(--border2);color:var(--text);border-radius:12px;padding:12px 14px;font-size:14px;font-family:'Plus Jakarta Sans',sans-serif;width:100%;outline:none;"/>
@@ -760,22 +732,22 @@
     </div>
   </div>
   <!-- Row 2: Hadir Masuk & Pulang -->
-  <div class="grid-2 mb-8">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
     <div class="stat-card stat-hadir" style="border-color:var(--green-border);padding:12px 14px;"><div class="stat-num" style="color:var(--green);font-size:22px;" id="dHadirMasuk">0</div><div class="stat-lbl">Hadir Masuk</div></div>
     <div class="stat-card" style="border-color:var(--blue-border);padding:12px 14px;"><div class="stat-num" style="color:var(--accent);font-size:22px;" id="dHadirPulang">0</div><div class="stat-lbl">Pulang</div></div>
   </div>
   <!-- Row 3: Belum & Sakit -->
-  <div class="grid-2 mb-8">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
     <div class="stat-card" style="padding:12px 14px;"><div class="stat-num" style="color:var(--muted);font-size:22px;" id="dBelum">0</div><div class="stat-lbl">Belum</div></div>
     <div class="stat-card stat-sakit" style="padding:12px 14px;"><div class="stat-num" style="font-size:22px;" id="dSakit">0</div><div class="stat-lbl">Sakit</div></div>
   </div>
   <!-- Row 4: Izin & Pancung -->
-  <div class="grid-2 mb-1r">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem;">
     <div class="stat-card stat-izin" style="padding:12px 14px;"><div class="stat-num" style="font-size:22px;" id="dIzin">0</div><div class="stat-lbl">Izin</div></div>
     <div class="stat-card stat-pancung" style="padding:12px 14px;"><div class="stat-num" style="font-size:22px;" id="dPancung">0</div><div class="stat-lbl">Pancung</div></div>
   </div>
   <!-- Alpha tetap ada di DOM tapi tersembunyi (masih dipakai di logika dashboard) -->
-  <div class="hidden"><span id="dAlpha">0</span></div>
+  <div style="display:none;"><span id="dAlpha">0</span></div>
 
   <!-- ADMIN PANEL -->
   <div class="admin-section">
@@ -910,7 +882,7 @@
     <button class="tab-inner" onclick="setRekapTab('custom',this)">Custom</button>
   </div>
 
-  <div id="customDateWrap" class="hidden">
+  <div id="customDateWrap" style="display:none;">
     <div class="date-filter">
       <input type="date" id="dateFrom"/>
       <input type="date" id="dateTo"/>
@@ -921,7 +893,7 @@
   <div id="rekapWrap"><div class="empty-state">Memuat rekap...</div></div>
 
   <!-- KUALITAS KELAS -->
-  <div id="kelasQualityWrap" class="hidden" style="margin-top:1rem;">
+  <div id="kelasQualityWrap" style="display:none; margin-top:1rem;">
     <div class="section-label" style="margin-bottom:8px;">📊 Kualitas Kelas</div>
     <div id="kelasQualityContent"></div>
   </div>
@@ -981,7 +953,7 @@
     <div class="modal-title" id="modalTitle">Konfirmasi Absen</div>
     <div class="modal-sub" id="modalSub">—</div>
 
-    <div id="statusOptsWrap" class="hidden">
+    <div id="statusOptsWrap" style="display:none;">
       <div class="section-label" style="margin-bottom:6px;">Status kehadiran</div>
       <div class="status-options" style="grid-template-columns: 1fr 1fr;">
         <button class="status-opt selected-hadir" id="opt-hadir" onclick="selectStatus('hadir')">✅ Hadir</button>
@@ -1603,7 +1575,7 @@ function renderSiswaCheckboxes(){
     <div class="siswa-checkbox-item" onclick="toggleSiswaCheck(${i})">
       <input type="checkbox" id="chk_siswa_${i}" value="${nama}" onchange="updateSelectedCount()"/>
       <label for="chk_siswa_${i}">${nama.toUpperCase()}</label>
-      <span id="chk_exist_${i}" class="siswa-existing-badge hidden"></span>
+      <span id="chk_exist_${i}" class="siswa-existing-badge" style="display:none;"></span>
     </div>`).join('');
   updateSelectedCount();
   // Set default tanggal = hari ini
@@ -1848,21 +1820,6 @@ function renderTodayLog(){
 // ===================== DASHBOARD =====================
 async function loadDashboard(){
   if(!window.dbReady) return;
-
-  // Tampilkan skeleton sebelum fetch
-  const skeletonStatCard = `<div class="skeleton-card"><div class="skeleton skeleton-num"></div><div class="skeleton skeleton-lbl"></div></div>`;
-  const skeletonRow = `<div class="skeleton skeleton-row"></div>`;
-
-  // Stat cards
-  ['dHadir','dHadirMasuk','dHadirPulang','dBelum','dSakit','dIzin','dPancung'].forEach(id => {
-    const el = document.getElementById(id);
-    if(el) { el.innerHTML = '<span class="skeleton" style="display:inline-block;width:36px;height:24px;border-radius:6px;"></span>'; }
-  });
-  // Log & belum wrap
-  const dw = document.getElementById('dashLogWrap');
-  const bw = document.getElementById('belumAbsenWrap');
-  if(dw) dw.innerHTML = [1,2,3].map(()=>skeletonRow).join('');
-  if(bw) bw.innerHTML = [1,2].map(()=>skeletonRow).join('');
   const {getDocs,query,where,orderBy} = window._fs;
   const today = getTodayWIB();
   let dateFrom = today, dateTo = today;
@@ -1941,19 +1898,6 @@ function setFilter(f, btn){
 // ===================== REKAP =====================
 async function loadRekap(){
   if(!window.dbReady) return;
-
-  // Skeleton sebelum fetch
-  const rekapWrap = document.getElementById('rekapWrap');
-  if(rekapWrap) rekapWrap.innerHTML = [1,2,3,4,5].map(()=>`
-    <div class="skeleton-card" style="margin-bottom:6px;">
-      <div class="skeleton" style="height:13px;width:40%;margin-bottom:10px;border-radius:6px;"></div>
-      <div class="skeleton" style="height:6px;border-radius:4px;margin-bottom:6px;"></div>
-      <div style="display:flex;gap:8px;">
-        <div class="skeleton" style="height:10px;width:60px;border-radius:4px;"></div>
-        <div class="skeleton" style="height:10px;width:50px;border-radius:4px;"></div>
-        <div class="skeleton" style="height:10px;width:45px;border-radius:4px;"></div>
-      </div>
-    </div>`).join('');
   const {getDocs,query,where,orderBy} = window._fs;
   const d=new Date();
   let dateFrom, dateTo=getTodayWIB();
