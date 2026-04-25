@@ -1131,37 +1131,45 @@ let siswaVerified = false;     // status NIS siswa sudah diverifikasi
 
 // Data NIS siswa — CATATAN: Idealnya ini juga disimpan di Firestore dan tidak di source code
 // Untuk keamanan lebih baik, pindahkan ke Firestore collection 'siswa_nis'
-const SISWA_NIS = {
-  // Format: "NAMA_SISWA": "NIS"
-  // Isi dengan NIS asli siswa. Contoh di bawah hanya placeholder.
-  "ALFIANA TESI": "2324001",
-  "APIN": "2324002",
-  "BENI FEBRIAN": "2324003",
-  "BODON": "2324004",
-  "BRIGIDI DIVO": "2324005",
-  "DERLIN KRISTI": "2324006",
-  "DOSO": "2324007",
-  "ELIZA BUDIYATI": "2324008",
-  "FITRAH AGUNG REZEKI": "2324009",
-  "FRISILA ELLA": "2324010",
-  "JULIA SINTA BELA": "2324011",
-  "JULIANTI DUPA": "2324012",
-  "KALIANUS OWEN": "2324013",
-  "KLARA JESIKA BERLI": "2324014",
-  "LISKA": "2324015",
-  "MARPEL": "2324016",
-  "MEISYA": "2324017",
-  "MITA": "2324018",
-  "PINA JULIANTI": "2324019",
-  "PISKA": "2324020",
-  "RACHEL VANESHA": "2324021",
-  "RASTI": "2324022",
-  "STEPAN RAFI NUAR SAPUTRA": "2324023",
-  "TOGENSIUS": "2324024",
-  "YUDIS ETAN": "2324025",
-  "YULIAWATI": "2324026",
-  "YESYURUN": "2324027"
+// Format: SHA-256 hash dari NISN asli
+// Untuk update NISN: hash NISN asli via crypto.subtle.digest lalu replace hash di bawah
+const SISWA_NIS_HASH = {
+  "ALFIANA TESI": "2e109b34d9a35142b3154aba1d7dc938ff2fd1da24abc77001735d80cf644bf2",
+  "APIN": "92201e6fd23b1e6edcb2566ee17f5163eb36bba73eff06f31389ca0ffad10e58",
+  "BENI FEBRIAN": "cb227493eb170436703b4ddb1c48a6aae7e4cdf413f24495d6caef74390eeabc",
+  "BODON": "004a6db52e1f69e7d97d6db7290f292e10dffe35e5763334f3dd51a1267f9caf",
+  "BRIGIDI DIVO": "c6b6414d35e10a5bc4dcbace0d78cb8968466cd9d6fd3ca309c4ec72b988efdf",
+  "DERLIN KRISTI": "4a9cdabbbfca3ca06f2c74bcbc9e3e1793c4f2154a2a4a833a2c033da7ce297b",
+  "DOSO": "9e832ab4d0793e34aa72bc7b46db5cf1317b88c92240a76a7130f1fe0060bb77",
+  "ELIZA BUDIYATI": "bee8d92e5cb410b2c29ef3448d19007ef91ee1ae0b02da4f8a3bdebfc8b50af5",
+  "FITRAH AGUNG REZEKI": "5a8c62a3a880a26ae7bd97e8e16c23174e8d65d261e9641a9cc9a086063d7c5e",
+  "FRISILA ELLA": "dae6520765848dd614b048996e0c950bfdd0b485df3638c7d3903ff652ee5508",
+  "JULIA SINTA BELA": "dcdb3e4bd3a2059899f0927563f6e82662cbd63b25a395c1afa972515f03cc47",
+  "JULIANTI DUPA": "6d8383dc762bcf353a6d89bdbfc1030b4f094f160c0f92d7dd91fb21d7a4623e",
+  "KALIANUS OWEN": "a2c757e6ffacc0b4dfc3426788fcdeda8597ba9eac61087c27e339c594f86fde",
+  "KLARA JESIKA BERLI": "4213e90caa94aa73e3a2187efe0dad60de3c45057e8ffc18916144b6ee1a1834",
+  "LISKA": "cb0c4d2f1ee44d349a5ceab3be849cd80e99a28f1f4c7013ada4453a66d827a7",
+  "MARPEL": "150d6be7cfbc019fa819b10b2eeaace1ab89d6f70ea35332be7a20c2454bd2c6",
+  "MEISYA": "713c7b0c22a86a9909c34ab7045d1f5820f8e28eb57ecde560e5eff40aba090d",
+  "MITA": "b93fb77e471872dafa87c62540f030c69ade7697ee436e47a158affcc0f39468",
+  "PINA JULIANTI": "60ed361f7e044157ab58c26efb9de1e135f236c1c5ad04e3f99139cbdc6557ec",
+  "PISKA": "47b738bef790dc245af638fdd641b6e713865b5205e1bcd994fa0e4a12ce31ee",
+  "RACHEL VANESHA": "a44b5d49e4c1b6fca5741e4fc19b876cb0e2b205234120dd3374589f43ed8dfe",
+  "RASTI": "c9763770fa59c62340ef018815ceecfc9abd76c904f93f2a75e7eebf15679f96",
+  "STEPAN RAFI NUAR SAPUTRA": "af6c8b2dcfb6cbb3fce84432c5e877ab487626e2f2e995fd673bf25821d76cfd",
+  "TOGENSIUS": "6e403139bbc25aefc2bf038a3c49876f2e5778df5d41d2d1820db2a959fe5994",
+  "YUDIS ETAN": "caca9f17a945085f2ddd10c49a5055c8483c3fdb3f321eec592de19bc3fefc3d",
+  "YULIAWATI": "a8d749b2b96c4defe19a6bb72edc5edc843d3916d96b74a39eb0635c476ce221",
+  "YESYURUN": "797ed11388d6d8ff3865fc796c4032fe5cfeb51a08c54d88ffbd7258be539e00"
 };
+
+// Helper: hash NISN input user pakai SHA-256 (async, Web Crypto API)
+async function hashNIS(nis) {
+  const msgBuffer = new TextEncoder().encode(nis);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
 
 // ===================== TIMEZONE FIX (WIB UTC+7) =====================
 function getTodayWIB() {
@@ -1254,7 +1262,7 @@ if(navigator.geolocation){
     document.getElementById('gpsDot').className='gps-dot '+(gpsOk?'ok':'err');
     document.getElementById('gpsText').textContent=gpsOk?'Lokasi terdeteksi di area sekolah':'Di luar area sekolah';
     document.getElementById('gpsDist').textContent=Math.round(dist)+' m';
-    updateButtons(new Date());
+    updateButtons(getWIBDate()); // fix: konsisten pakai WIB
   }, ()=>{
     document.getElementById('gpsDot').className='gps-dot err';
     document.getElementById('gpsText').textContent='Izin GPS ditolak';
@@ -1305,15 +1313,18 @@ function onNisChange(){
     return;
   }
 
-  const correctNIS = SISWA_NIS[nama];
-  if(nis === correctNIS) {
-    siswaVerified = true;
-    if(nisStatus) { nisStatus.textContent = '✅ NIS terverifikasi'; nisStatus.style.color='var(--green)'; }
-  } else {
-    siswaVerified = false;
-    if(nisStatus) { nisStatus.textContent = nis.length >= 7 ? '❌ NIS tidak cocok' : ''; nisStatus.style.color='var(--red)'; }
-  }
-  updateButtons(getWIBDate());
+  // Hash input NIS user lalu bandingkan dengan hash di SISWA_NIS_HASH
+  const correctHash = SISWA_NIS_HASH[nama];
+  hashNIS(nis).then(inputHash => {
+    if(inputHash === correctHash) {
+      siswaVerified = true;
+      if(nisStatus) { nisStatus.textContent = '✅ NIS terverifikasi'; nisStatus.style.color='var(--green)'; }
+    } else {
+      siswaVerified = false;
+      if(nisStatus) { nisStatus.textContent = nis.length >= 7 ? '❌ NIS tidak cocok' : ''; nisStatus.style.color='var(--red)'; }
+    }
+    updateButtons(getWIBDate());
+  });
 }
 
 function updateButtons(d){
@@ -1495,6 +1506,11 @@ async function confirmAdminAction(){
     return;
   }
 
+  if(action === 'fix-duplikat'){
+    await _eksekusiFixDuplikat();
+    return;
+  }
+
 
   if(action === 'toggle-libur'){
     isHariLibur = !isHariLibur;
@@ -1504,7 +1520,7 @@ async function confirmAdminAction(){
       await setDoc(doc(window._db, 'config', 'app'), { isHariLibur }, { merge: true });
     } catch(e){ console.error('Gagal simpan state libur ke Firestore:', e); }
     updateKontrolUI();
-    updateButtons(new Date());
+    updateButtons(getWIBDate()); // fix: konsisten pakai WIB
     showToast(isHariLibur ? '🎉 Hari ini ditandai Libur!' : 'Hari ini kembali aktif', isHariLibur ? 'success' : 'warn');
     return;
   }
@@ -1544,7 +1560,7 @@ async function confirmAdminAction(){
   if(action === 'edit-by-tanggal'){
     const tanggal = document.getElementById('adminTanggalInput').value;
     const siswaDipilih = siswa ? siswa.split(',') : [];
-    const hariIdx = new Date(tanggal).getDay();
+    const hariIdx = new Date(tanggal + 'T00:00:00').getDay(); // fix: hindari timezone shift
     let saved = 0, skipped = 0;
     for(const nama of siswaDipilih){
       const cekSnap = await getDocs(query(window._col, where('nama','==',nama), where('tanggal','==',tanggal), where('tipe','==','masuk')));
@@ -1961,7 +1977,7 @@ function setFilter(f, btn){
 async function loadRekap(){
   if(!window.dbReady) return;
   const {getDocs,query,where,orderBy} = window._fs;
-  const d=new Date();
+  const d=getWIBDate(); // fix: pakai WIB biar konsisten
   let dateFrom, dateTo=getTodayWIB();
 
   if(currentRekapTab==='bulan'){
@@ -2266,7 +2282,7 @@ async function previewHapusByTanggal(){
   });
 
   const colorMap = {hadir:'var(--green)',alpha:'var(--red)',pancung:'var(--orange)',izin:'var(--yellow)',sakit:'var(--purple)'};
-  const hari = new Date(tanggal).toLocaleDateString('id-ID',{weekday:'long'});
+  const hari = new Date(tanggal + 'T00:00:00').toLocaleDateString('id-ID',{weekday:'long'}); // fix: hindari timezone shift
 
   let html = `<div style="background:var(--red-bg);border:1px solid var(--red-border);border-radius:10px;padding:10px;margin-bottom:8px;">
     <div style="font-size:12px;font-weight:700;color:var(--red);margin-bottom:4px;">📅 ${hari}, ${tanggal} — ${docs.length} record ditemukan</div>
@@ -2469,8 +2485,14 @@ async function _eksekusiHapusSingleRecord(){
 async function fixSemuaDuplikat(){
   const docs = window._auditDuplikatDocs || [];
   if(docs.length === 0){ showToast('Tidak ada duplikat', 'warn'); return; }
-  if(!confirm(`Hapus ${docs.length} record duplikat? Data asli (yang pertama per tanggal) tetap aman.`)) return;
+  // fix: wajib verifikasi PIN admin sebelum hapus massal
+  pendingAdminAction = 'fix-duplikat';
+  pendingAdminSiswa = null;
+  showPinModal('fix-duplikat', `untuk hapus ${docs.length} record duplikat`);
+}
 
+async function _eksekusiFixDuplikat(){
+  const docs = window._auditDuplikatDocs || [];
   const {deleteDoc} = window._fs;
   let berhasil = 0;
   for(const d of docs){
