@@ -1423,7 +1423,7 @@ async function doAbsen(nama){
     });
     closeModal();
     showToast(pendingType==='masuk'?'Absen masuk berhasil! ✅':'Absen pulang berhasil! 🏠','success');
-    loadDashboard(); await loadTodayLog(); onSiswaChange();
+    await loadTodayLog(); loadDashboard(); onSiswaChange();
   } catch(e){ console.error(e); showToast('Gagal menyimpan. Cek koneksi!','error'); }
   finally { btnC.disabled=false; btnC.textContent='Ya, Absen Sekarang'; }
 }
@@ -1858,6 +1858,7 @@ async function submitIzin(){
     document.getElementById('izinKeterangan').value = '';
     document.getElementById('izinSiswaSelect').value = '';
     document.getElementById('izinTanggal').value = getTodayWIB();
+    setIzinType('izin'); // reset toggle ke default setelah submit
     await loadTodayLog(); loadDashboard();
   } catch(e){ console.error(e); showToast('Gagal mengirim. Cek koneksi!','error'); }
   finally { btn.disabled=false; btn.textContent='Kirim Pengajuan'; }
@@ -2092,7 +2093,8 @@ async function loadRekap(){
   const siswaAlphaParah = SISWA.filter(n => rekap[n].alpha >= 5).length;
   const siswaPancungParah = SISWA.filter(n => rekap[n].pancung >= 3).length;
   const siswaPerluPerhatian = SISWA.filter(n => rekap[n].alpha >= 3 || rekap[n].pancung >= 2);
-  const rateKehadiran = totalSiswa > 0 ? Math.round((tHadir / (tHadir + tAlpha + tPancung + tIzin + tSakit)) * 100) : 0;
+  const totalAbsenKelas = tHadir + tAlpha + tPancung + tIzin + tSakit;
+  const rateKehadiran = totalAbsenKelas > 0 ? Math.round((tHadir / totalAbsenKelas) * 100) : 0;
 
   // Verdict kelas
   let verdictIcon, verdictLabel, verdictSub, verdictColor;
@@ -2165,6 +2167,7 @@ function exportWA(){
   if(!window._rekapData){ showToast('Load rekap dulu','warn'); return; }
   if(!window._rekapRange){ showToast('Load rekap dulu','warn'); return; }
   const {dateFrom,dateTo}=window._rekapRange;
+  if(!dateFrom||!dateTo){ showToast('Rentang tanggal tidak valid!','warn'); return; }
 
   // Hitung total keseluruhan kelas
   let totalHadir=0, totalIzin=0, totalSakit=0, totalAlpha=0, totalPancung=0;
@@ -2222,6 +2225,7 @@ function exportCSV(){
   if(!window._rekapData){ showToast('Load rekap dulu','warn'); return; }
   if(!window._rekapRange){ showToast('Load rekap dulu','warn'); return; }
   const {dateFrom,dateTo}=window._rekapRange;
+  if(!dateFrom||!dateTo){ showToast('Rentang tanggal tidak valid!','warn'); return; }
 
   // Header CSV
   let csv = 'No,Nama,Hadir,Izin,Sakit,Alpha,Pancung,Total,Keterangan\n';
@@ -2453,9 +2457,9 @@ async function runAuditCore(namaDaftar){
 
 async function hapusSingleRecord(docId, btn){
   if(!window.dbReady) return;
-  // Simpan docId & btn ke global, lalu minta PIN admin
+  // Simpan docId ke global — btn TIDAK disimpan, dicari ulang saat eksekusi
+  // biar ga stale kalau DOM re-render sebelum PIN dikonfirmasi
   window._pendingHapusDocId = docId;
-  window._pendingHapusBtn = btn;
   pendingAdminAction = 'hapus-single-record';
   pendingAdminSiswa = null;
   showPinModal('hapus-single-record', 'untuk hapus record ini');
@@ -2463,22 +2467,21 @@ async function hapusSingleRecord(docId, btn){
 
 async function _eksekusiHapusSingleRecord(){
   const docId = window._pendingHapusDocId;
-  const btn = window._pendingHapusBtn;
-  if(!docId || !btn) return;
+  if(!docId) return;
+  // Cari tombol hapus yang sesuai docId di DOM (fresh, tidak stale)
+  const btn = document.querySelector(`.audit-del-btn[onclick*="${docId}"]`);
   const {deleteDoc, doc} = window._fs;
   try {
-    btn.disabled = true; btn.textContent = '...';
+    if(btn){ btn.disabled = true; btn.textContent = '...'; }
     await deleteDoc(doc(window._db, 'absensi', docId));
-    btn.closest('.audit-record-item').style.opacity = '0.3';
-    btn.textContent = '✓';
+    if(btn){ btn.closest('.audit-record-item').style.opacity = '0.3'; btn.textContent = '✓'; }
     showToast('Record berhasil dihapus!', 'success');
     await loadTodayLog(); loadDashboard(); loadRekap();
   } catch(e){
-    btn.disabled = false; btn.textContent = '🗑️ Hapus';
+    if(btn){ btn.disabled = false; btn.textContent = '🗑️ Hapus'; }
     showToast('Gagal hapus record', 'error');
   } finally {
     window._pendingHapusDocId = null;
-    window._pendingHapusBtn = null;
   }
 }
 
