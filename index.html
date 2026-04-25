@@ -678,7 +678,7 @@
 
   <!-- Tombol Izin dari luar sekolah -->
   <div class="izin-btn-wrap">
-    <button class="izin-external-btn" onclick="showPage('izin',event); document.querySelectorAll('.nav-btn')[3].classList.add('active'); document.querySelectorAll('.nav-btn').forEach((b,i)=>{ if(i!==3) b.classList.remove('active'); });">
+    <button class="izin-external-btn" onclick="showPage('izin',event)">
       📋 Tidak hadir? Ajukan Izin / Sakit dari sini
     </button>
   </div>
@@ -1039,22 +1039,59 @@ async function loadConfig(){
     if(appDoc.exists() && appDoc.data().isHariLibur !== undefined){
       isHariLibur = appDoc.data().isHariLibur;
       updateKontrolUI();
-      updateButtons(new Date());
+      updateButtons(getWIBDate());
     }
   } catch(e){
     console.error('Gagal load config dari Firestore:', e);
   }
 }
 
-document.getElementById('loadingOverlay').style.display = 'none';
-window.dbReady = true;
-loadTodayLog();
-loadDashboard();
-loadRekap();
-updateKontrolUI();
-loadLaporCounter();
-renderSiswaCheckboxes();
-loadConfig(); // Load PIN admin & state libur dari Firestore
+// ===================== FIREBASE INIT WITH FALLBACK =====================
+async function initApp(){
+  // Timeout 10 detik — kalau Firebase ga nyambung, kasih tau user
+  const timeout = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error('timeout')), 10000)
+  );
+
+  try {
+    // Test koneksi dengan getDoc ringan
+    await Promise.race([
+      getDoc(doc(db, 'config', 'app')),
+      timeout
+    ]);
+
+    // Sukses — init app normal
+    document.getElementById('loadingOverlay').style.display = 'none';
+    window.dbReady = true;
+    loadTodayLog();
+    loadDashboard();
+    loadRekap();
+    updateKontrolUI();
+    loadLaporCounter();
+    renderSiswaCheckboxes();
+    loadConfig();
+
+  } catch(e) {
+    // Gagal — entah timeout atau error Firebase
+    const isTimeout = e.message === 'timeout';
+    document.getElementById('loadingOverlay').innerHTML = `
+      <div style="text-align:center;padding:2rem;">
+        <div style="font-size:2.5rem;margin-bottom:1rem;">📡</div>
+        <div style="font-size:15px;font-weight:700;color:#f0f4ff;margin-bottom:8px;">
+          ${isTimeout ? 'Koneksi Timeout' : 'Gagal Konek ke Database'}
+        </div>
+        <div style="font-size:13px;color:#8896b3;margin-bottom:1.5rem;">
+          ${isTimeout ? 'Server tidak merespons. Cek koneksi internet kamu.' : 'Terjadi kesalahan. Coba refresh halaman.'}
+        </div>
+        <button onclick="location.reload()" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:600;cursor:pointer;">
+          🔄 Coba Lagi
+        </button>
+      </div>`;
+    console.error('Firebase init gagal:', e);
+  }
+}
+
+initApp();
 </script>
 
 <script>
@@ -1142,11 +1179,23 @@ document.getElementById('izinTanggal').value = getTodayWIB();
 
 // ===================== CLOCK =====================
 function pad(n){ return String(n).padStart(2,'0'); }
+function getWIBDate(){
+  // Selalu pakai WIB (UTC+7) terlepas dari timezone device
+  const now = new Date();
+  const wib = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }));
+  return wib;
+}
+let _lastClockMinute = -1;
 function updateClock(){
-  const d = new Date();
+  const d = getWIBDate();
   document.getElementById('clock').textContent = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
-  document.getElementById('clockDate').textContent = `${HARI[d.getDay()]}, ${d.getDate()} ${BULAN[d.getMonth()]} ${d.getFullYear()}`;
-  updateWindowStatus(d); updateButtons(d);
+  // Update tanggal, status window & tombol hanya kalau menit berubah
+  const currentMinute = d.getHours() * 60 + d.getMinutes();
+  if(currentMinute !== _lastClockMinute){
+    _lastClockMinute = currentMinute;
+    document.getElementById('clockDate').textContent = `${HARI[d.getDay()]}, ${d.getDate()} ${BULAN[d.getMonth()]} ${d.getFullYear()}`;
+    updateWindowStatus(d); updateButtons(d);
+  }
 }
 setInterval(updateClock, 1000); updateClock();
 
@@ -1221,7 +1270,7 @@ function onSiswaChange(){
   if(!nama){
     sc.style.display='none';
     if(nisWrap) nisWrap.style.display='none';
-    updateButtons(new Date());
+    updateButtons(getWIBDate());
     return;
   }
 
@@ -1234,7 +1283,7 @@ function onSiswaChange(){
   document.getElementById('stMasuk').textContent = m ? `${m.waktu} (${m.status})` : '—';
   document.getElementById('stPulang').textContent = p ? `${p.waktu} (${p.status})` : '—';
   document.getElementById('stKet').textContent = m?.keterangan || p?.keterangan || '—';
-  updateButtons(new Date());
+  updateButtons(getWIBDate());
 }
 
 function onNisChange(){
@@ -1257,7 +1306,7 @@ function onNisChange(){
     siswaVerified = false;
     if(nisStatus) { nisStatus.textContent = nis.length >= 7 ? '❌ NIS tidak cocok' : ''; nisStatus.style.color='var(--red)'; }
   }
-  updateButtons(new Date());
+  updateButtons(getWIBDate());
 }
 
 function updateButtons(d){
@@ -1268,9 +1317,7 @@ function updateButtons(d){
   const sudahP = nama&&todayLogs.some(l=>l.nama===nama&&l.tipe==='pulang');
   const bm=document.getElementById('btnMasuk'), bp=document.getElementById('btnPulang');
 
-  // Tombol absen hanya aktif jika NIS sudah terverifikasi
-  const nisOk = siswaVerified || !nama; // kalau belum pilih nama, biarkan (disabled karena !nama)
-
+  // Tombol absen hanya aktif jika NIS sudah terverifikasi (siswaVerified)
   if(isHariLibur){
     bm.disabled=true; bm.className='absen-btn masuk'; bm.querySelector('.btn-label').textContent='🎉 Sedang Libur';
     bp.disabled=true; bp.className='absen-btn pulang'; bp.querySelector('.btn-label').textContent='🎉 Sedang Libur';
@@ -1293,7 +1340,7 @@ function triggerAbsen(type){
   const nama = document.getElementById('siswaSelect').value;
   if(!nama){ showToast('Pilih nama dulu!','warn'); return; }
   pendingType=type; selectedStatus='hadir';
-  const d=new Date(), t=`${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  const d=getWIBDate(), t=`${pad(d.getHours())}:${pad(d.getMinutes())}`;
   document.getElementById('modalIcon').textContent = type==='masuk'?'✅':'🏠';
   document.getElementById('modalTitle').textContent = type==='masuk'?'Absen Masuk':'Absen Pulang';
   document.getElementById('modalSub').textContent = `${nama} · ${t} WIB`;
@@ -1337,7 +1384,7 @@ async function confirmAbsen(){
 
 async function doAbsen(nama){
   if(!window.dbReady) return;
-  const d=new Date(), t=`${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  const d=getWIBDate(), t=`${pad(d.getHours())}:${pad(d.getMinutes())}`;
   const today=getTodayWIB();
   const ket=document.getElementById('ketInput').value.trim();
   const status=pendingType==='pulang'?'hadir':selectedStatus;
@@ -1436,6 +1483,11 @@ async function confirmAdminAction(){
     return;
   }
 
+  if(action === 'hapus-single-record'){
+    await _eksekusiHapusSingleRecord();
+    return;
+  }
+
 
   if(action === 'toggle-libur'){
     isHariLibur = !isHariLibur;
@@ -1451,7 +1503,7 @@ async function confirmAdminAction(){
   }
 
   const {addDoc, getDocs, query, where, Timestamp} = window._fs;
-  const d = new Date(), today = getTodayWIB();
+  const d = getWIBDate(), today = getTodayWIB();
   const t = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 
   if(action === 'pancung' || action === 'alpha'){
@@ -1485,9 +1537,6 @@ async function confirmAdminAction(){
   if(action === 'edit-by-tanggal'){
     const tanggal = document.getElementById('adminTanggalInput').value;
     const siswaDipilih = siswa ? siswa.split(',') : [];
-    const {addDoc, getDocs, query, where, Timestamp} = window._fs;
-    const d = new Date();
-    const t = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
     const hariIdx = new Date(tanggal).getDay();
     let saved = 0, skipped = 0;
     for(const nama of siswaDipilih){
@@ -1616,9 +1665,8 @@ async function refreshExistingBadges(){
       const s = existingMap[nama];
       const colorMap = {hadir:'var(--green)',alpha:'var(--red)',pancung:'var(--orange)',izin:'var(--yellow)',sakit:'var(--purple)'};
       badge.style.display = 'inline-block';
-      badge.style.background = colorMap[s] ? colorMap[s].replace('var(','').replace(')','') : 'transparent';
-      badge.style.color = '#fff';
       badge.style.background = colorMap[s] || 'var(--muted)';
+      badge.style.color = '#fff';
       badge.textContent = s.toUpperCase();
     } else {
       badge.style.display = 'none';
@@ -1682,7 +1730,6 @@ async function submitLaporan(){
   ));
   if(!cekSnap.empty){ showToast('Kamu sudah pernah lapor orang ini hari ini!','warn'); return; }
 
-  const btn = document.getElementById('laporPelaporSelect').parentElement.nextElementSibling.nextElementSibling.nextElementSibling;
   try {
     await addDoc(window._col,{
       tipe:'laporan-pancung', pelapor, target, tanggal:today,
@@ -1770,7 +1817,7 @@ async function submitIzin(){
     const cek = await getDocs(query(window._col, where('nama','==',nama), where('tanggal','==',tanggal), where('tipe','==','masuk')));
     if(!cek.empty){ showToast('Sudah ada catatan absen di tanggal ini!','warn'); btn.disabled=false; btn.textContent='Kirim Pengajuan'; return; }
 
-    const d = new Date(tanggal);
+    const d = new Date(tanggal + 'T00:00:00');
     await addDoc(window._col,{
       nama, tipe:'masuk', status:izinType, keterangan:ket,
       waktu:'—', tanggal, timestamp:Timestamp.fromDate(new Date()),
@@ -1825,7 +1872,7 @@ async function loadDashboard(){
   let dateFrom = today, dateTo = today;
 
   if(currentFilter==='minggu'){
-    const d=new Date(); d.setDate(d.getDate()-d.getDay()+1);
+    const d=getWIBDate(); const day=d.getDay(); d.setDate(d.getDate()-(day===0?6:day-1));
     dateFrom=d.toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
   } else if(currentFilter==='bulan'){
     const d=new Date(); dateFrom=`${d.getFullYear()}-${pad(d.getMonth()+1)}-01`;
@@ -2085,7 +2132,8 @@ function setRekapTab(tab, btn){
 // ===================== EXPORT =====================
 function exportWA(){
   if(!window._rekapData){ showToast('Load rekap dulu','warn'); return; }
-  const {dateFrom,dateTo}=window._rekapRange||{};
+  if(!window._rekapRange){ showToast('Load rekap dulu','warn'); return; }
+  const {dateFrom,dateTo}=window._rekapRange;
 
   // Hitung total keseluruhan kelas
   let totalHadir=0, totalIzin=0, totalSakit=0, totalAlpha=0, totalPancung=0;
@@ -2121,7 +2169,8 @@ function exportWA(){
 
 function exportCSV(){
   if(!window._rekapData){ showToast('Load rekap dulu','warn'); return; }
-  const {dateFrom,dateTo}=window._rekapRange||{};
+  if(!window._rekapRange){ showToast('Load rekap dulu','warn'); return; }
+  const {dateFrom,dateTo}=window._rekapRange;
 
   // Header CSV
   let csv = 'No,Nama,Hadir,Izin,Sakit,Alpha,Pancung,Total\n';
@@ -2352,7 +2401,18 @@ async function runAuditCore(namaDaftar){
 
 async function hapusSingleRecord(docId, btn){
   if(!window.dbReady) return;
-  if(!confirm('Hapus record ini?')) return;
+  // Simpan docId & btn ke global, lalu minta PIN admin
+  window._pendingHapusDocId = docId;
+  window._pendingHapusBtn = btn;
+  pendingAdminAction = 'hapus-single-record';
+  pendingAdminSiswa = null;
+  showPinModal('hapus-single-record', 'untuk hapus record ini');
+}
+
+async function _eksekusiHapusSingleRecord(){
+  const docId = window._pendingHapusDocId;
+  const btn = window._pendingHapusBtn;
+  if(!docId || !btn) return;
   const {deleteDoc, doc} = window._fs;
   try {
     btn.disabled = true; btn.textContent = '...';
@@ -2364,6 +2424,9 @@ async function hapusSingleRecord(docId, btn){
   } catch(e){
     btn.disabled = false; btn.textContent = '🗑️ Hapus';
     showToast('Gagal hapus record', 'error');
+  } finally {
+    window._pendingHapusDocId = null;
+    window._pendingHapusBtn = null;
   }
 }
 
@@ -2398,7 +2461,9 @@ let currentPageIndex = 0;
 
 function showPage(p, e){
   document.querySelectorAll('.nav-btn').forEach(el=>el.classList.remove('active'));
-  if(e && e.target) e.target.classList.add('active');
+  const navIdx = PAGE_ORDER.indexOf(p);
+  const navBtns = document.querySelectorAll('.nav-btn');
+  if(navBtns[navIdx]) navBtns[navIdx].classList.add('active');
   const pages = document.querySelectorAll('.page');
   const target = document.getElementById('page-'+p);
   const newIndex = PAGE_ORDER.indexOf(p);
