@@ -1002,6 +1002,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, query, where, orderBy, Timestamp, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app-check.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAuFXi9JAphxjQl2kEGYjf9aSXJlo25Xj8",
@@ -1014,6 +1015,12 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+
+// ===================== APP CHECK (reCAPTCHA v3) =====================
+initializeAppCheck(app, {
+  provider: new ReCaptchaV3Provider('6LckUcksAAAAADwSYTQFSh2yd9oT7mttGEYzDFtM'),
+  isTokenAutoRefreshEnabled: true
+});
 const db = getFirestore(app);
 window._db = db;
 window._col = collection(db, "absensi");
@@ -1061,15 +1068,15 @@ async function initApp(){
     ]);
 
     // Sukses — init app normal
-    document.getElementById('loadingOverlay').style.display = 'none';
     window.dbReady = true;
+    await loadConfig(); // di-await duluan biar PIN & isHariLibur siap sebelum UI aktif
+    document.getElementById('loadingOverlay').style.display = 'none';
     loadTodayLog();
     loadDashboard();
     loadRekap();
     updateKontrolUI();
     loadLaporCounter();
     renderSiswaCheckboxes();
-    loadConfig();
 
   } catch(e) {
     // Gagal — entah timeout atau error Firebase
@@ -1294,7 +1301,7 @@ function onNisChange(){
   if(!nama || !nis) {
     siswaVerified = false;
     if(nisStatus) nisStatus.textContent = '';
-    updateButtons(new Date());
+    updateButtons(getWIBDate());
     return;
   }
 
@@ -1745,6 +1752,8 @@ async function submitLaporan(){
 
 async function checkLaporanPancung(target, today){
   if(!window.dbReady) return;
+  // Kalau hari libur, auto-pancung tidak berlaku
+  if(isHariLibur){ showToast("Hari ini libur, laporan pancung tidak diproses.","warn"); return; }
   const {addDoc, getDocs, query, where, Timestamp} = window._fs;
 
   // Hitung total laporan untuk target hari ini
@@ -1763,7 +1772,7 @@ async function checkLaporanPancung(target, today){
   ));
   if(!cekAbsen.empty) return; // sudah ada catatan, skip
 
-  const d = new Date();
+  const d = getWIBDate();
   const t = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
   try {
     await addDoc(window._col,{
@@ -1807,6 +1816,12 @@ async function submitIzin(){
   if(!nama){ showToast('Pilih nama dulu!','warn'); return; }
   if(!tanggal){ showToast('Pilih tanggal!','warn'); return; }
   if(!ket){ showToast('Tulis keterangan dulu!','warn'); return; }
+
+  // Validasi: izin/sakit tidak berlaku di hari Sabtu/Minggu
+  const hariTerpilih = new Date(tanggal + 'T00:00:00').getDay();
+  if(hariTerpilih === 0 || hariTerpilih === 6){
+    showToast('Tanggal yang dipilih adalah hari libur (Sabtu/Minggu)!','warn'); return;
+  }
 
   const btn = document.getElementById('submitIzinBtn');
   btn.disabled = true; btn.textContent = 'Mengirim...';
@@ -1875,9 +1890,9 @@ async function loadDashboard(){
     const d=getWIBDate(); const day=d.getDay(); d.setDate(d.getDate()-(day===0?6:day-1));
     dateFrom=d.toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
   } else if(currentFilter==='bulan'){
-    const d=new Date(); dateFrom=`${d.getFullYear()}-${pad(d.getMonth()+1)}-01`;
+    const d=getWIBDate(); dateFrom=`${d.getFullYear()}-${pad(d.getMonth()+1)}-01`;
   } else if(currentFilter==='semester'){
-    const d=new Date(); const m=d.getMonth();
+    const d=getWIBDate(); const m=d.getMonth();
     dateFrom=m<6?`${d.getFullYear()}-01-01`:`${d.getFullYear()}-07-01`;
   }
 
@@ -2167,17 +2182,38 @@ function exportWA(){
   navigator.clipboard.writeText(txt).then(()=>showToast('Rekap disalin! Paste ke WA','success'));
 }
 
+function getKeteranganCSV(r) {
+  const totalAbsen = r.hadir + r.izin + r.sakit + r.alpha + r.pancung;
+  if (totalAbsen === 0) return 'Belum Ada Data';
+  if (r.alpha === 0 && r.pancung === 0 && r.hadir > 0) {
+    if (r.izin === 0 && r.sakit === 0) return 'Siswa Rajin';
+    return 'Kehadiran Baik';
+  }
+  if (r.alpha >= 5 && r.pancung >= 3) return 'Alpha + Sering Pancung';
+  if (r.alpha >= 5) return 'Sering Alpha';
+  if (r.pancung >= 3) return 'Sering Pancung';
+  if (r.alpha >= 4 && r.pancung >= 1) return 'Alpha + Pancung';
+  if (r.alpha >= 3 && r.alpha < 5) return 'Mulai Sering Alpha';
+  if (r.alpha >= 1 && r.alpha < 3 && r.pancung >= 1) return 'Ada Alpha & Pancung';
+  if (r.pancung >= 1 && r.pancung < 3) return 'Ada Pancung';
+  if (r.alpha >= 1 && r.alpha < 3) return 'Ada Alpha';
+  if (r.izin > 3) return 'Sering Izin';
+  if (r.sakit > 3) return 'Sering Sakit';
+  return 'Kehadiran Normal';
+}
+
 function exportCSV(){
   if(!window._rekapData){ showToast('Load rekap dulu','warn'); return; }
   if(!window._rekapRange){ showToast('Load rekap dulu','warn'); return; }
   const {dateFrom,dateTo}=window._rekapRange;
 
   // Header CSV
-  let csv = 'No,Nama,Hadir,Izin,Sakit,Alpha,Pancung,Total\n';
+  let csv = 'No,Nama,Hadir,Izin,Sakit,Alpha,Pancung,Total,Keterangan\n';
 
   SISWA.forEach((nama,i)=>{
     const r=window._rekapData[nama];
-    csv += `${i+1},"${nama}",${r.hadir},${r.izin},${r.sakit},${r.alpha},${r.pancung},${r.total}\n`;
+    const ket=getKeteranganCSV(r);
+    csv += `${i+1},"${nama}",${r.hadir},${r.izin},${r.sakit},${r.alpha},${r.pancung},${r.total},"${ket}"\n`;
   });
 
   // Baris total kelas
@@ -2187,7 +2223,7 @@ function exportCSV(){
     totalHadir+=r.hadir; totalIzin+=r.izin; totalSakit+=r.sakit;
     totalAlpha+=r.alpha; totalPancung+=r.pancung; totalAll+=r.total;
   });
-  csv += `,"TOTAL KELAS",${totalHadir},${totalIzin},${totalSakit},${totalAlpha},${totalPancung},${totalAll}\n`;
+  csv += `,"TOTAL KELAS",${totalHadir},${totalIzin},${totalSakit},${totalAlpha},${totalPancung},${totalAll},\n`;
 
   // Download file
   const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
