@@ -50,6 +50,10 @@
   /* PAGES */
   .page { display: none; padding: 1.25rem 1rem 5rem; max-width: 480px; margin: 0 auto; position: relative; z-index: 1; }
   .page.active { display: block; }
+  .page.slide-from-right { animation: slideFromRight 0.32s cubic-bezier(0.22,1,0.36,1) both; }
+  .page.slide-from-left  { animation: slideFromLeft  0.32s cubic-bezier(0.22,1,0.36,1) both; }
+  @keyframes slideFromRight { from { opacity:0; transform: translateX(48px); } to { opacity:1; transform: none; } }
+  @keyframes slideFromLeft  { from { opacity:0; transform: translateX(-48px); } to { opacity:1; transform: none; } }
 
   /* Position-aware animation — JS assigns classes per element */
   .anim-from-top {
@@ -622,7 +626,7 @@
   <div class="window-row">
     <div class="window-card">
       <div class="window-label">Absen Masuk</div>
-      <div class="window-time">05:40 – 09:30</div>
+      <div class="window-time" id="winMasukTime">05:40 – 09:30</div>
       <div class="window-status" id="winMasukStatus">—</div>
     </div>
     <div class="window-card">
@@ -1121,13 +1125,16 @@ const HARI = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
 const BULAN = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 const JADWAL_PULANG = {'1':'13:30-14:40','2':'13:30-14:40','3':'13:30-14:40','4':'13:30-14:40','5':'10:40-12:40'};
 
-let gpsOk = false, pendingType = null, selectedStatus = 'hadir';
+// gpsOk disimpan dalam closure — tidak bisa diakses/dimanipulasi dari DevTools console
+const _gps = (() => { let _ok = false; return { get ok(){ return _ok; }, set ok(v){ _ok = !!v; } }; })();
+let pendingType = null, selectedStatus = 'hadir';
 let currentFilter = 'hari', currentRekapTab = 'bulan';
 let todayLogs = [];
 let pendingAdminAction = null, pendingAdminSiswa = null;
 let izinType = 'izin';
 let isHariLibur = false;       // toggle hari libur (disimpan juga di Firestore)
 let siswaVerified = false;     // status NIS siswa sudah diverifikasi
+const _pancungLock = new Set(); // anti race condition auto-pancung per target
 
 // Data NIS siswa — CATATAN: Idealnya ini juga disimpan di Firestore dan tidak di source code
 // Untuk keamanan lebih baik, pindahkan ke Firestore collection 'siswa_nis'
@@ -1221,7 +1228,7 @@ function inWindow(a,b,d){ const n=nowMin(d); return n>=parseMin(a)&&n<=parseMin(
 function updateWindowStatus(d){
   const day = d.getDay(), valid = day>=1&&day<=5;
   const wm = document.getElementById('winMasukStatus');
-  const wmTime = document.querySelector('#page-absen .window-card:first-child .window-time');
+  const wmTime = document.getElementById('winMasukTime');
   if(!valid){
     if(wmTime) wmTime.textContent='—';
     wm.textContent='Libur'; wm.className='window-status closed';
@@ -1234,7 +1241,7 @@ function updateWindowStatus(d){
 
   const jp = JADWAL_PULANG[String(day)];
   const wpt = document.getElementById('winPulangTime'), wps = document.getElementById('winPulangStatus');
-  if(!jp){ wpt.textContent='—'; wps.textContent='Libur'; wps.className='window-status closed'; }
+  if(!jp){ wpt.textContent='—'; wps.textContent='Libur'; wps.className='window-status closed'; document.getElementById('subPulang').textContent='—'; }
   else {
     const [a,b] = jp.split('-');
     wpt.textContent = jp.replace('-',' – ');
@@ -1251,22 +1258,38 @@ function haversine(la1,lo1,la2,lo2){
   const a=Math.sin(dL/2)**2+Math.cos(la1*Math.PI/180)*Math.cos(la2*Math.PI/180)*Math.sin(dO/2)**2;
   return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
 }
+
+// watchPosition hanya untuk UI indicator — TIDAK dipakai untuk validasi absen
 if(navigator.geolocation){
   navigator.geolocation.watchPosition(pos=>{
     const dist=haversine(pos.coords.latitude,pos.coords.longitude,SCHOOL_LAT,SCHOOL_LNG);
-    gpsOk = dist<=RADIUS_M;
-    // Simpan koordinat & jarak ke variabel global untuk dikirim ke Firestore saat absen
-    window._lastGpsLat = pos.coords.latitude;
-    window._lastGpsLng = pos.coords.longitude;
-    window._lastGpsDist = Math.round(dist);
-    document.getElementById('gpsDot').className='gps-dot '+(gpsOk?'ok':'err');
-    document.getElementById('gpsText').textContent=gpsOk?'Lokasi terdeteksi di area sekolah':'Di luar area sekolah';
+    const inRange = dist<=RADIUS_M;
+    // UI only — variabel ini TIDAK dipakai di doAbsen (anti-inject)
+    document.getElementById('gpsDot').className='gps-dot '+(inRange?'ok':'err');
+    document.getElementById('gpsText').textContent=inRange?'Lokasi terdeteksi di area sekolah':'Di luar area sekolah';
     document.getElementById('gpsDist').textContent=Math.round(dist)+' m';
-    updateButtons(getWIBDate()); // fix: konsisten pakai WIB
+    // _gps.ok tetap diupdate untuk updateButtons UI
+    _gps.ok = inRange;
+    updateButtons(getWIBDate());
   }, ()=>{
+    _gps.ok = false;
     document.getElementById('gpsDot').className='gps-dot err';
     document.getElementById('gpsText').textContent='Izin GPS ditolak';
+    updateButtons(getWIBDate());
   },{enableHighAccuracy:true,maximumAge:10000});
+}
+
+// Ambil posisi GPS FRESH saat absen — maximumAge:0 = tidak boleh pakai cache
+// Ini yang dipakai untuk validasi, bukan variabel global yang bisa di-inject
+function getFreshGPS(){
+  return new Promise((resolve, reject)=>{
+    if(!navigator.geolocation){ reject(new Error('NO_GEOLOCATION')); return; }
+    navigator.geolocation.getCurrentPosition(
+      pos => resolve(pos),
+      err => reject(err),
+      { enableHighAccuracy:true, timeout:12000, maximumAge:0 }
+    );
+  });
 }
 
 // ===================== BUTTONS =====================
@@ -1289,9 +1312,16 @@ function onSiswaChange(){
     return;
   }
 
+  // Disable tombol dulu saat loading — cegah race condition
+  const bm = document.getElementById('btnMasuk');
+  const bp = document.getElementById('btnPulang');
+  bm.disabled = true; bp.disabled = true;
+
   // Tampilkan input NIS
   if(nisWrap) nisWrap.style.display='block';
 
+  // Pakai todayLogs yang sudah ada di memory — tidak perlu request Firestore lagi
+  // loadTodayLog() hanya dipanggil saat ada perubahan data (absen, admin action, dsb)
   sc.style.display='block';
   const m = todayLogs.find(l=>l.nama===nama&&l.tipe==='masuk');
   const p = todayLogs.find(l=>l.nama===nama&&l.tipe==='pulang');
@@ -1315,6 +1345,12 @@ function onNisChange(){
 
   // Hash input NIS user lalu bandingkan dengan hash di SISWA_NIS_HASH
   const correctHash = SISWA_NIS_HASH[nama];
+  if(correctHash === undefined){
+    siswaVerified = false;
+    if(nisStatus){ nisStatus.textContent = '⚠️ NIS siswa ini belum terdaftar, hubungi admin'; nisStatus.style.color='var(--yellow)'; }
+    updateButtons(getWIBDate());
+    return;
+  }
   hashNIS(nis).then(inputHash => {
     if(inputHash === correctHash) {
       siswaVerified = true;
@@ -1343,12 +1379,12 @@ function updateButtons(d){
   }
 
   if(sudahM){ bm.disabled=true; bm.className='absen-btn masuk done'; bm.querySelector('.btn-label').textContent='Sudah Absen ✓'; }
-  else { bm.disabled=!(valid&&gpsOk&&inWindow('05:40','09:30',d)&&!!nama&&siswaVerified); bm.className='absen-btn masuk'; bm.querySelector('.btn-label').textContent='Absen Masuk'; }
+  else { bm.disabled=!(valid&&_gps.ok&&inWindow('05:40','09:30',d)&&!!nama&&siswaVerified); bm.className='absen-btn masuk'; bm.querySelector('.btn-label').textContent='Absen Masuk'; }
 
   if(sudahP){ bp.disabled=true; bp.className='absen-btn pulang done-pulang'; bp.querySelector('.btn-label').textContent='Sudah Absen ✓'; }
   else {
     let canP=false;
-    if(jp){ const [a,b]=jp.split('-'); canP=valid&&gpsOk&&inWindow(a,b,d)&&!!nama&&sudahM&&siswaVerified; }
+    if(jp){ const [a,b]=jp.split('-'); canP=valid&&_gps.ok&&inWindow(a,b,d)&&!!nama&&sudahM&&siswaVerified; }
     bp.disabled=!canP; bp.className='absen-btn pulang'; bp.querySelector('.btn-label').textContent='Absen Pulang';
   }
 }
@@ -1407,8 +1443,57 @@ async function doAbsen(nama){
   const ket=document.getElementById('ketInput').value.trim();
   const status=pendingType==='pulang'?'hadir':selectedStatus;
   const btnC=document.getElementById('modalConfirm');
-  btnC.disabled=true; btnC.textContent='Menyimpan...';
+  const modalVisible = document.getElementById('modalOverlay').classList.contains('show');
+  if(modalVisible){ btnC.disabled=true; btnC.textContent='📡 Verifikasi lokasi...'; }
+
   try {
+    // ── FRESH GPS VALIDATION ──────────────────────────────────────────
+    // Ambil posisi baru langsung saat tombol ditekan (maximumAge:0).
+    // Tidak pakai variabel global (_lastGpsLat, dll) yang bisa di-inject
+    // lewat DevTools console.
+    let freshPos;
+    try {
+      freshPos = await getFreshGPS();
+    } catch(gpsErr){
+      const msg = gpsErr.code === 1 ? 'Izin GPS ditolak. Aktifkan lokasi di browser.' :
+                  gpsErr.code === 2 ? 'Sinyal GPS tidak ditemukan. Coba di luar ruangan.' :
+                  gpsErr.message === 'NO_GEOLOCATION' ? 'Browser tidak mendukung GPS.' :
+                  'GPS timeout. Pastikan lokasi aktif lalu coba lagi.';
+      showToast(msg, 'error');
+      if(modalVisible){ btnC.disabled=false; btnC.textContent='Ya, Absen Sekarang'; }
+      closeModal();
+      return;
+    }
+
+    const freshLat  = freshPos.coords.latitude;
+    const freshLng  = freshPos.coords.longitude;
+    const freshDist = Math.round(haversine(freshLat, freshLng, SCHOOL_LAT, SCHOOL_LNG));
+    const freshAcc  = Math.round(freshPos.coords.accuracy); // akurasi dalam meter
+
+    // Tolak kalau akurasi terlalu buruk (>150m) — bisa jadi GPS mock/spoofed
+    if(freshAcc > 150){
+      showToast(`Akurasi GPS terlalu rendah (${freshAcc}m). Coba di tempat terbuka.`, 'error');
+      if(modalVisible){ btnC.disabled=false; btnC.textContent='Ya, Absen Sekarang'; }
+      closeModal();
+      return;
+    }
+
+    // Tolak kalau di luar radius sekolah
+    if(freshDist > RADIUS_M){
+      showToast(`Di luar area sekolah! Jarak: ${freshDist}m (maks ${RADIUS_M}m)`, 'error');
+      // Update UI dot sesuai kondisi nyata
+      _gps.ok = false;
+      document.getElementById('gpsDot').className='gps-dot err';
+      document.getElementById('gpsText').textContent='Di luar area sekolah';
+      document.getElementById('gpsDist').textContent=freshDist+' m';
+      updateButtons(getWIBDate());
+      if(modalVisible){ btnC.disabled=false; btnC.textContent='Ya, Absen Sekarang'; }
+      closeModal();
+      return;
+    }
+    // ── END GPS VALIDATION ────────────────────────────────────────────
+
+    if(modalVisible) btnC.textContent='Menyimpan...';
     const {addDoc,getDocs,query,where,Timestamp}=window._fs;
     const cekQ=query(window._col, where('nama','==',nama), where('tanggal','==',today), where('tipe','==',pendingType));
     const cekSnap=await getDocs(cekQ);
@@ -1418,14 +1503,14 @@ async function doAbsen(nama){
       await loadTodayLog(); onSiswaChange(); return;
     }
     await addDoc(window._col,{ nama,tipe:pendingType,status,keterangan:ket, waktu:t,tanggal:today, timestamp:Timestamp.fromDate(d), hari:HARI[d.getDay()],
-      // Simpan koordinat GPS di server untuk validasi (mencegah bypass GPS client-side)
-      gps_lat: window._lastGpsLat || null, gps_lng: window._lastGpsLng || null, gps_dist: window._lastGpsDist || null
+      // Koordinat diambil fresh saat absen — bukan dari variabel global
+      gps_lat: freshLat, gps_lng: freshLng, gps_dist: freshDist, gps_accuracy: freshAcc
     });
     closeModal();
     showToast(pendingType==='masuk'?'Absen masuk berhasil! ✅':'Absen pulang berhasil! 🏠','success');
     await loadTodayLog(); loadDashboard(); onSiswaChange();
   } catch(e){ console.error(e); showToast('Gagal menyimpan. Cek koneksi!','error'); }
-  finally { btnC.disabled=false; btnC.textContent='Ya, Absen Sekarang'; }
+  finally { if(modalVisible){ btnC.disabled=false; btnC.textContent='Ya, Absen Sekarang'; } }
 }
 
 // ===================== ADMIN ACTIONS =====================
@@ -1495,7 +1580,7 @@ async function confirmAdminAction(){
   closePinModal();
 
   if(action === 'absen-confirm'){
-    document.getElementById('modalOverlay').classList.add('show');
+    // Modal tidak dibuka ulang — doAbsen langsung dipanggil tanpa perlu modal lagi
     const nama = document.getElementById('siswaSelect').value;
     await doAbsen(nama);
     return;
@@ -1700,6 +1785,13 @@ async function refreshExistingBadges(){
 async function adminEditByTanggal(){
   const tanggal = document.getElementById('adminTanggalInput').value;
   if(!tanggal){ showToast('Pilih tanggal dulu!','warn'); return; }
+
+  // Validasi: tidak boleh input absen di hari Sabtu/Minggu
+  const hariTerpilih = new Date(tanggal + 'T00:00:00').getDay();
+  if(hariTerpilih === 0 || hariTerpilih === 6){
+    showToast('Tanggal yang dipilih adalah hari libur (Sabtu/Minggu)!','warn'); return;
+  }
+
   const checked = Array.from(document.querySelectorAll('#siswaCheckboxList input[type="checkbox"]:checked')).map(cb => cb.value);
   if(checked.length === 0){ showToast('Pilih minimal 1 siswa!','warn'); return; }
 
@@ -1770,27 +1862,32 @@ async function checkLaporanPancung(target, today){
   if(!window.dbReady) return;
   // Kalau hari libur, auto-pancung tidak berlaku
   if(isHariLibur){ showToast("Hari ini libur, laporan pancung tidak diproses.","warn"); return; }
-  const {addDoc, getDocs, query, where, Timestamp} = window._fs;
 
-  // Hitung total laporan untuk target hari ini
-  const snap = await getDocs(query(window._col,
-    where('tipe','==','laporan-pancung'),
-    where('tanggal','==',today),
-    where('target','==',target)
-  ));
-  if(snap.docs.length < 2) return; // belum cukup
+  // Anti race condition — kalau request untuk target ini lagi berjalan, skip
+  if(_pancungLock.has(target)) return;
+  _pancungLock.add(target);
 
-  // Cek sudah ada catatan absen/pancung hari ini
-  const cekAbsen = await getDocs(query(window._col,
-    where('nama','==',target),
-    where('tanggal','==',today),
-    where('tipe','==','masuk')
-  ));
-  if(!cekAbsen.empty) return; // sudah ada catatan, skip
-
-  const d = getWIBDate();
-  const t = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
   try {
+    const {addDoc, getDocs, query, where, Timestamp} = window._fs;
+
+    // Hitung total laporan untuk target hari ini
+    const snap = await getDocs(query(window._col,
+      where('tipe','==','laporan-pancung'),
+      where('tanggal','==',today),
+      where('target','==',target)
+    ));
+    if(snap.docs.length < 2) return; // belum cukup
+
+    // Cek sudah ada catatan absen/pancung hari ini
+    const cekAbsen = await getDocs(query(window._col,
+      where('nama','==',target),
+      where('tanggal','==',today),
+      where('tipe','==','masuk')
+    ));
+    if(!cekAbsen.empty) return; // sudah ada catatan, skip
+
+    const d = getWIBDate();
+    const t = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
     await addDoc(window._col,{
       nama:target, tipe:'masuk', status:'pancung',
       keterangan:`Auto — ${snap.docs.length} laporan pancung`,
@@ -1801,6 +1898,7 @@ async function checkLaporanPancung(target, today){
     showToast(`✂️ ${target} otomatis dicatat PANCUNG (${snap.docs.length} laporan)!`,'warn');
     await loadTodayLog(); loadDashboard();
   } catch(e){ console.error('auto pancung error',e); }
+  finally { _pancungLock.delete(target); }
 }
 
 async function loadLaporCounter(){
@@ -1854,14 +1952,20 @@ async function submitIzin(){
       waktu:'—', tanggal, timestamp:Timestamp.fromDate(new Date()),
       hari:HARI[d.getDay()], fromIzinForm:true
     });
+    // Reset form HANYA kalau sukses — biar user ga kehilangan input saat error
     showToast(izinType==='izin'?'Izin berhasil dikirim! 📋':'Sakit berhasil dicatat! 🤒','success');
     document.getElementById('izinKeterangan').value = '';
     document.getElementById('izinSiswaSelect').value = '';
     document.getElementById('izinTanggal').value = getTodayWIB();
-    setIzinType('izin'); // reset toggle ke default setelah submit
+    setIzinType('izin');
     await loadTodayLog(); loadDashboard();
-  } catch(e){ console.error(e); showToast('Gagal mengirim. Cek koneksi!','error'); }
-  finally { btn.disabled=false; btn.textContent='Kirim Pengajuan'; }
+  } catch(e){
+    console.error(e);
+    showToast('Gagal mengirim. Cek koneksi!','error');
+    // Form TIDAK direset saat error — user bisa langsung retry tanpa isi ulang
+  } finally {
+    btn.disabled=false; btn.textContent='Kirim Pengajuan';
+  }
 }
 
 // ===================== TODAY LOG =====================
@@ -1872,7 +1976,7 @@ async function loadTodayLog(){
   const q = query(window._col, where('tanggal','==',today));
   const snap = await getDocs(q);
   // FIX: sort aman — waktu '—' (pulang/izin) diletakkan di akhir
-  todayLogs = snap.docs.map(d=>d.data()).sort((a,b)=>{
+  todayLogs = snap.docs.map(d=>d.data()).filter(l=>l.tipe==='masuk'||l.tipe==='pulang').sort((a,b)=>{
     const wa = a.waktu==='—'?'99:99':a.waktu;
     const wb = b.waktu==='—'?'99:99':b.waktu;
     return wa.localeCompare(wb);
@@ -1882,11 +1986,9 @@ async function loadTodayLog(){
 
 function renderTodayLog(){
   const wrap=document.getElementById('logWrap');
+  // todayLogs sudah difilter masuk/pulang di loadTodayLog — tidak perlu filter ulang
   if(!todayLogs.length){ wrap.innerHTML='<div class="empty-state">Belum ada absensi hari ini</div>'; return; }
-  // FIX: tampilkan masuk DAN pulang, exclude laporan-pancung
-  const visibleLogs = todayLogs.filter(l=>l.tipe==='masuk'||l.tipe==='pulang');
-  if(!visibleLogs.length){ wrap.innerHTML='<div class="empty-state">Belum ada absensi hari ini</div>'; return; }
-  wrap.innerHTML = visibleLogs.map(l=>`
+  wrap.innerHTML = todayLogs.map(l=>`
     <div class="log-item">
       <div><div class="log-name">${l.nama}</div><div class="log-type">${l.tipe==='masuk'?'Absen Masuk':'Absen Pulang'}${l.keterangan?' · '+l.keterangan:''}</div></div>
       <div style="display:flex;align-items:center;gap:6px;">
@@ -1904,8 +2006,12 @@ async function loadDashboard(){
   let dateFrom = today, dateTo = today;
 
   if(currentFilter==='minggu'){
-    const d=getWIBDate(); const day=d.getDay(); d.setDate(d.getDate()-(day===0?6:day-1));
-    dateFrom=d.toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
+    const d=getWIBDate(); const day=d.getDay();
+    const diffStart = day===0?6:day-1;
+    const start=new Date(d); start.setDate(d.getDate()-diffStart);
+    const end=new Date(start); end.setDate(start.getDate()+6);
+    dateFrom=start.toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
+    dateTo=end.toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
   } else if(currentFilter==='bulan'){
     const d=getWIBDate(); dateFrom=`${d.getFullYear()}-${pad(d.getMonth()+1)}-01`;
   } else if(currentFilter==='semester'){
@@ -1935,7 +2041,8 @@ async function loadDashboard(){
   const hadirMasuk = hadirNama.size;
   const hadirPulang = [...hadirNama].filter(n=>pulangNama.has(n)).length;
 
-  document.getElementById('dHadir').textContent=hadir;
+  // dHadir pakai nama unik — konsisten dengan dHadirMasuk
+  document.getElementById('dHadir').textContent=hadirNama.size;
   document.getElementById('dHadirMasuk').textContent=hadirMasuk;
   document.getElementById('dHadirPulang').textContent=hadirPulang;
   document.getElementById('dAlpha').textContent=alpha;
@@ -1957,7 +2064,7 @@ async function loadDashboard(){
 
   // Log terbaru
   const dw=document.getElementById('dashLogWrap');
-  dw.innerHTML = logs.slice(0,20).map(l=>`
+  dw.innerHTML = logs.filter(l=>l.tipe==='masuk'||l.tipe==='pulang').slice(0,20).map(l=>`
     <div class="log-item">
       <div><div class="log-name">${l.nama}</div><div class="log-type">${l.tanggal} · ${l.tipe==='masuk'?'Masuk':'Pulang'}${l.keterangan?' · '+l.keterangan:''}</div></div>
       <div style="display:flex;align-items:center;gap:6px;">
@@ -1999,8 +2106,10 @@ async function loadRekap(){
   const rekap = {};
   SISWA.forEach(n=>{ rekap[n]={hadir:0,izin:0,sakit:0,alpha:0,pancung:0,total:0}; });
   logs.forEach(l=>{
-    if(rekap[l.nama]){
-      rekap[l.nama][l.status]=(rekap[l.nama][l.status]||0)+1;
+    if(rekap[l.nama] && l.status){
+      if(rekap[l.nama][l.status] !== undefined){
+        rekap[l.nama][l.status]++;
+      }
       rekap[l.nama].total++;
     }
   });
@@ -2198,7 +2307,27 @@ function exportWA(){
   txt+=`━━━━━━━━━━━━━━━━━━━━\n`;
   txt+=`_Dikirim via E-Absen Digital X RPL_`;
 
-  navigator.clipboard.writeText(txt).then(()=>showToast('Rekap disalin! Paste ke WA','success'));
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt)
+      .then(()=>showToast('Rekap disalin! Paste ke WA','success'))
+      .catch(()=>{
+        // Fallback: buat textarea sementara lalu execCommand copy
+        const ta = document.createElement('textarea');
+        ta.value = txt; ta.style.position='fixed'; ta.style.opacity='0';
+        document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); showToast('Rekap disalin! Paste ke WA','success'); }
+        catch(e){ showToast('Gagal menyalin. Coba manual!','error'); }
+        document.body.removeChild(ta);
+      });
+  } else {
+    // Browser tidak support Clipboard API, pakai execCommand
+    const ta = document.createElement('textarea');
+    ta.value = txt; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); showToast('Rekap disalin! Paste ke WA','success'); }
+    catch(e){ showToast('Gagal menyalin. Coba manual!','error'); }
+    document.body.removeChild(ta);
+  }
 }
 
 function getKeteranganCSV(r) {
@@ -2243,7 +2372,7 @@ function exportCSV(){
     totalHadir+=r.hadir; totalIzin+=r.izin; totalSakit+=r.sakit;
     totalAlpha+=r.alpha; totalPancung+=r.pancung; totalAll+=r.total;
   });
-  csv += `,"TOTAL KELAS",${totalHadir},${totalIzin},${totalSakit},${totalAlpha},${totalPancung},${totalAll},\n`;
+  csv += `"","TOTAL KELAS",${totalHadir},${totalIzin},${totalSakit},${totalAlpha},${totalPancung},${totalAll},""\n`;
 
   // Download file
   const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
@@ -2324,7 +2453,6 @@ async function previewHapusByTanggal(){
 async function eksekusiHapusByTanggal(tanggal){
   const docs = window._hapusTanggalDocs || [];
   if(docs.length === 0){ showToast('Tidak ada data','warn'); return; }
-  if(!confirm(`Yakin hapus SEMUA ${docs.length} record tanggal ${tanggal}? Ini tidak bisa dibatalkan!`)) return;
 
   // Wajib PIN admin
   pendingAdminAction = 'hapus-by-tanggal';
@@ -2457,8 +2585,11 @@ async function runAuditCore(namaDaftar){
 
 async function hapusSingleRecord(docId, btn){
   if(!window.dbReady) return;
-  // Simpan docId ke global — btn TIDAK disimpan, dicari ulang saat eksekusi
-  // biar ga stale kalau DOM re-render sebelum PIN dikonfirmasi
+  // Kalau sudah ada pending hapus yang belum dikonfirmasi, tolak klik baru
+  if(window._pendingHapusDocId){
+    showToast('Konfirmasi PIN yang sebelumnya dulu!', 'warn');
+    return;
+  }
   window._pendingHapusDocId = docId;
   pendingAdminAction = 'hapus-single-record';
   pendingAdminSiswa = null;
@@ -2554,10 +2685,15 @@ function animatePage(page) {
   const rowGroups = {};
   children.forEach(el => {
     const rect = el.getBoundingClientRect();
+    // Skip elemen yang belum ter-render (rect semua 0)
+    if (rect.width === 0 && rect.height === 0) return;
     const rowKey = Math.round(rect.top / 10) * 10; // bucket per 10px
     if (!rowGroups[rowKey]) rowGroups[rowKey] = [];
     rowGroups[rowKey].push({ el, rect, rowKey });
   });
+
+  // Guard: kalau tidak ada elemen visible, skip animasi
+  if (Object.keys(rowGroups).length === 0) return;
 
   // Sort rows top to bottom
   const sortedRows = Object.keys(rowGroups).sort((a,b) => a - b);
