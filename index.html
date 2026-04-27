@@ -943,7 +943,7 @@
 
   <div class="form-group">
     <label class="form-label">Keterangan</label>
-    <textarea class="form-input form-textarea" id="izinKeterangan" placeholder="Tulis alasan izin/sakit..."></textarea>
+    <textarea class="form-input form-textarea" id="izinKeterangan" placeholder="Tulis alasan izin/sakit..." maxlength="300"></textarea>
   </div>
 
   <button class="submit-izin-btn" id="submitIzinBtn" onclick="submitIzin()">Kirim Pengajuan</button>
@@ -968,7 +968,7 @@
         <button class="status-opt admin-only" id="opt-pancung" onclick="selectStatus('pancung')">✂️ Pancung</button>
       </div>
       <div class="ket-wrap" id="ketWrap">
-        <textarea id="ketInput" placeholder="Tulis keterangan (opsional)..."></textarea>
+        <textarea id="ketInput" placeholder="Tulis keterangan (opsional)..." maxlength="200"></textarea>
       </div>
     </div>
 
@@ -1038,11 +1038,8 @@ async function loadConfig(){
     if(pinDoc.exists() && pinDoc.data().pin){
       ADMIN_PIN = pinDoc.data().pin;
     } else {
-      // Kalau belum ada, buat dokumen default (PIN: KOCAKK)
-      // PENTING: Setelah deploy pertama, ganti PIN ini langsung di Firestore Console!
-      await setDoc(doc(db, 'config', 'admin'), { pin: 'KOCAKK' });
-      ADMIN_PIN = 'KOCAKK';
-      console.warn('⚠️ PIN admin masih default. Segera ganti di Firestore Console → config/admin → pin');
+      // Dokumen config/admin belum dibuat — admin wajib set PIN via Firestore Console dulu
+      ADMIN_PIN = null;
     }
 
     // Load state isHariLibur dari Firestore
@@ -1201,6 +1198,9 @@ document.getElementById('izinTanggal').value = getTodayWIB();
 
 // ===================== CLOCK =====================
 function pad(n){ return String(n).padStart(2,'0'); }
+
+// ===================== XSS SANITIZER =====================
+function esc(str){ return String(str==null?'':str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 function getWIBDate(){
   // Fix timezone edge case: pakai offset UTC+7 manual, lebih reliable di semua browser
   // daripada new Date(toLocaleString()) yang output-nya beda-beda per browser
@@ -1576,7 +1576,7 @@ function checkPinInput(){
 async function confirmAdminAction(){
   const pin = document.getElementById('adminPinInput').value;
   // Validasi PIN terhadap nilai yang diambil dari Firestore
-  if(ADMIN_PIN === null){ showToast('PIN belum dimuat, coba refresh!','error'); return; }
+  if(ADMIN_PIN === null){ showToast('PIN admin belum dikonfigurasi. Set PIN di Firestore Console → config/admin → pin','error'); return; }
   if(pin !== ADMIN_PIN){ showToast('PIN salah!','error'); return; }
 
   // Simpan action & siswa sebelum closePinModal() menghapusnya
@@ -1998,10 +1998,10 @@ function renderTodayLog(){
   if(!todayLogs.length){ wrap.innerHTML='<div class="empty-state">Belum ada absensi hari ini</div>'; return; }
   wrap.innerHTML = todayLogs.map(l=>`
     <div class="log-item">
-      <div><div class="log-name">${l.nama}</div><div class="log-type">${l.tipe==='masuk'?'Absen Masuk':'Absen Pulang'}${l.keterangan?' · '+l.keterangan:''}</div></div>
+      <div><div class="log-name">${esc(l.nama)}</div><div class="log-type">${l.tipe==='masuk'?'Absen Masuk':'Absen Pulang'}${l.keterangan?' · '+esc(l.keterangan):''}</div></div>
       <div style="display:flex;align-items:center;gap:6px;">
-        <span class="log-time">${l.waktu}</span>
-        <span class="log-badge badge-${l.status==='hadir'&&l.tipe==='pulang'?'pulang':l.status}">${l.tipe==='pulang'?'pulang':l.status}</span>
+        <span class="log-time">${esc(l.waktu)}</span>
+        <span class="log-badge badge-${l.status==='hadir'&&l.tipe==='pulang'?'pulang':esc(l.status)}">${l.tipe==='pulang'?'pulang':esc(l.status)}</span>
       </div>
     </div>`).join('');
 }
@@ -2064,7 +2064,7 @@ async function loadDashboard(){
     const belum = SISWA.filter(n=>!sudahAbsen.has(n));
     document.getElementById('dBelum').textContent=belum.length;
     const bw=document.getElementById('belumAbsenWrap');
-    bw.innerHTML = belum.length ? belum.map(n=>`<div class="log-item"><div class="log-name">${n}</div><span class="log-badge badge-alpha">belum</span></div>`).join('') : '<div class="empty-state">Semua siswa sudah absen!</div>';
+    bw.innerHTML = belum.length ? belum.map(n=>`<div class="log-item"><div class="log-name">${esc(n)}</div><span class="log-badge badge-alpha">belum</span></div>`).join('') : '<div class="empty-state">Semua siswa sudah absen!</div>';
   } else {
     document.getElementById('dBelum').textContent='—';
     document.getElementById('belumAbsenWrap').innerHTML='<div class="empty-state">Hanya tampil untuk filter "Hari Ini"</div>';
@@ -2074,10 +2074,10 @@ async function loadDashboard(){
   const dw=document.getElementById('dashLogWrap');
   dw.innerHTML = logs.filter(l=>l.tipe==='masuk'||l.tipe==='pulang').slice(0,20).map(l=>`
     <div class="log-item">
-      <div><div class="log-name">${l.nama}</div><div class="log-type">${l.tanggal} · ${l.tipe==='masuk'?'Masuk':'Pulang'}${l.keterangan?' · '+l.keterangan:''}</div></div>
+      <div><div class="log-name">${esc(l.nama)}</div><div class="log-type">${esc(l.tanggal)} · ${l.tipe==='masuk'?'Masuk':'Pulang'}${l.keterangan?' · '+esc(l.keterangan):''}</div></div>
       <div style="display:flex;align-items:center;gap:6px;">
-        <span class="log-time">${l.waktu}</span>
-        <span class="log-badge badge-${l.tipe==='pulang'?'pulang':l.status}">${l.tipe==='pulang'?'pulang':l.status}</span>
+        <span class="log-time">${esc(l.waktu)}</span>
+        <span class="log-badge badge-${l.tipe==='pulang'?'pulang':esc(l.status)}">${l.tipe==='pulang'?'pulang':esc(l.status)}</span>
       </div>
     </div>`).join('') || '<div class="empty-state">Tidak ada data</div>';
 }
@@ -2431,22 +2431,22 @@ async function previewHapusByTanggal(){
   const hari = new Date(tanggal + 'T00:00:00+07:00').toLocaleDateString('id-ID',{weekday:'long'}); // Fix tz: paksa WIB
 
   let html = `<div style="background:var(--red-bg);border:1px solid var(--red-border);border-radius:10px;padding:10px;margin-bottom:8px;">
-    <div style="font-size:12px;font-weight:700;color:var(--red);margin-bottom:4px;">📅 ${hari}, ${tanggal} — ${docs.length} record ditemukan</div>
+    <div style="font-size:12px;font-weight:700;color:var(--red);margin-bottom:4px;">📅 ${esc(hari)}, ${esc(tanggal)} — ${docs.length} record ditemukan</div>
     <div style="font-size:11px;color:var(--muted);">Semua record di bawah akan dihapus permanen.</div>
   </div>`;
 
   Object.entries(grouped).forEach(([nama, records]) => {
     html += `<div class="audit-siswa-block" style="margin-bottom:6px;">
       <div class="audit-siswa-header">
-        <span class="audit-siswa-name">${nama.toUpperCase()}</span>
+        <span class="audit-siswa-name">${esc(nama).toUpperCase()}</span>
         <span class="audit-siswa-count">${records.length} record</span>
       </div>`;
     records.forEach(r => {
       html += `<div class="audit-record-item">
         <div class="audit-record-left">
           <span class="audit-record-detail">
-            <span style="color:${colorMap[r.status]||'var(--muted)'};font-weight:700;">${(r.status||'?').toUpperCase()}</span>
-            · ${r.tipe} · ${r.waktu||'—'}
+            <span style="color:${colorMap[r.status]||'var(--muted)'};font-weight:700;">${esc(r.status||'?').toUpperCase()}</span>
+            · ${esc(r.tipe)} · ${esc(r.waktu||'—')}
           </span>
         </div>
       </div>`;
@@ -2559,7 +2559,7 @@ async function runAuditCore(namaDaftar){
 
     html += `<div class="audit-siswa-block">
       <div class="audit-siswa-header">
-        <span class="audit-siswa-name">${nama.toUpperCase()}</span>
+        <span class="audit-siswa-name">${esc(nama).toUpperCase()}</span>
         <span class="audit-siswa-count" style="color:${dupCount>0?'var(--red)':'var(--green)'};">
           ${totalRecord} record${dupCount > 0 ? ` · ${dupCount} duplikat ⚠️` : ' · bersih ✅'}
         </span>
@@ -2574,14 +2574,14 @@ async function runAuditCore(namaDaftar){
         html += `<div class="audit-record-item" style="${isDuplikat ? 'background:rgba(239,68,68,0.06);border-radius:6px;padding:5px 6px;margin-top:2px;' : ''}">
           <div class="audit-record-left">
             <span class="audit-record-tanggal" style="color:${isDuplikat?'var(--red)':'var(--text)'};">
-              ${isDuplikat ? '⚠️ ' : ''}${tgl}
+              ${isDuplikat ? '⚠️ ' : ''}${esc(tgl)}
             </span>
             <span class="audit-record-detail">
-              <span style="color:${statusColor};font-weight:700;">${(rec.status||'?').toUpperCase()}</span>
-              · ${rec.waktu || '—'} · ${rec.keterangan || 'tanpa ket'}
+              <span style="color:${statusColor};font-weight:700;">${esc(rec.status||'?').toUpperCase()}</span>
+              · ${esc(rec.waktu || '—')} · ${esc(rec.keterangan || 'tanpa ket')}
             </span>
           </div>
-          <button class="audit-del-btn" onclick="hapusSingleRecord('${rec.id}', this)">🗑️ Hapus</button>
+          <button class="audit-del-btn" onclick="hapusSingleRecord('${esc(rec.id)}', this)">🗑️ Hapus</button>
         </div>`;
       });
     });
@@ -2679,11 +2679,10 @@ function showPage(p, e){
   target.classList.add(goingRight ? 'slide-from-right' : 'slide-from-left');
   void target.offsetWidth;
   target.classList.add('active');
-  // Bug #5 fix: kasih jeda 80ms biar DOM + konten sempat render
-  // sebelum animatePage baca getBoundingClientRect(), hindari rect semua 0
   if(p==='dashboard') loadDashboard();
   if(p==='rekap') loadRekap();
-  setTimeout(() => animatePage(target), 80);
+  // Pakai double-rAF: frame pertama browser layout, frame kedua rect sudah valid
+  requestAnimationFrame(() => requestAnimationFrame(() => animatePage(target)));
 }
 
 
@@ -2818,8 +2817,8 @@ function enterApp() {
       activePage.classList.remove('active','slide-from-left','slide-from-right');
       void activePage.offsetWidth;
       activePage.classList.add('active');
-      // Jalankan setelah display:block ter-render
-      setTimeout(() => animatePage(activePage), 80);
+      // Jalankan setelah display:block ter-render — double-rAF lebih reliable dari setTimeout 80ms
+      requestAnimationFrame(() => requestAnimationFrame(() => animatePage(activePage)));
     }
   }, 3100);
 
