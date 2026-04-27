@@ -626,7 +626,7 @@
   <div class="window-row">
     <div class="window-card">
       <div class="window-label">Absen Masuk</div>
-      <div class="window-time" id="winMasukTime">05:40 – 13:30</div>
+      <div class="window-time" id="winMasukTime">05:40 – 09:30</div>
       <div class="window-status" id="winMasukStatus">—</div>
     </div>
     <div class="window-card">
@@ -671,7 +671,7 @@
     <button class="absen-btn masuk" id="btnMasuk" onclick="triggerAbsen('masuk')" disabled>
       <span class="btn-icon">✅</span>
       <span class="btn-label">Absen Masuk</span>
-      <span class="btn-sub">05:40 – 13:30</span>
+      <span class="btn-sub">05:40 – 09:30</span>
     </button>
     <button class="absen-btn pulang" id="btnPulang" onclick="triggerAbsen('pulang')" disabled>
       <span class="btn-icon">🏠</span>
@@ -1202,10 +1202,11 @@ document.getElementById('izinTanggal').value = getTodayWIB();
 // ===================== CLOCK =====================
 function pad(n){ return String(n).padStart(2,'0'); }
 function getWIBDate(){
-  // Selalu pakai WIB (UTC+7) terlepas dari timezone device
+  // Fix timezone edge case: pakai offset UTC+7 manual, lebih reliable di semua browser
+  // daripada new Date(toLocaleString()) yang output-nya beda-beda per browser
   const now = new Date();
-  const wib = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }));
-  return wib;
+  const utcMs = now.getTime() + now.getTimezoneOffset() * 60000;
+  return new Date(utcMs + 7 * 3600000); // UTC+7 = WIB
 }
 let _lastClockMinute = -1;
 function updateClock(){
@@ -1234,8 +1235,8 @@ function updateWindowStatus(d){
     wm.textContent='Libur'; wm.className='window-status closed';
   }
   else {
-    if(wmTime) wmTime.textContent='05:40 – 13:30';
-    if(inWindow('05:40','13:30',d)){ wm.textContent='Sedang buka'; wm.className='window-status open'; }
+    if(wmTime) wmTime.textContent='05:40 – 09:30';
+    if(inWindow('05:40','09:30',d)){ wm.textContent='Sedang buka'; wm.className='window-status open'; }
     else { wm.textContent=nowMin(d)<parseMin('05:40')?'Belum buka':'Sudah tutup'; wm.className='window-status closed'; }
   }
 
@@ -1379,7 +1380,7 @@ function updateButtons(d){
   }
 
   if(sudahM){ bm.disabled=true; bm.className='absen-btn masuk done'; bm.querySelector('.btn-label').textContent='Sudah Absen ✓'; }
-  else { bm.disabled=!(valid&&_gps.ok&&inWindow('05:40','13:30',d)&&!!nama&&siswaVerified); bm.className='absen-btn masuk'; bm.querySelector('.btn-label').textContent='Absen Masuk'; }
+  else { bm.disabled=!(valid&&_gps.ok&&inWindow('05:40','09:30',d)&&!!nama&&siswaVerified); bm.className='absen-btn masuk'; bm.querySelector('.btn-label').textContent='Absen Masuk'; }
 
   if(sudahP){ bp.disabled=true; bp.className='absen-btn pulang done-pulang'; bp.querySelector('.btn-label').textContent='Sudah Absen ✓'; }
   else {
@@ -1438,10 +1439,14 @@ async function confirmAbsen(){
 
 async function doAbsen(nama){
   if(!window.dbReady) return;
+  // Fix race condition: snapshot pendingType & selectedStatus di awal
+  // supaya tidak ter-overwrite jika user tap tombol lain sebelum async selesai
+  const absenType = pendingType;
+  const absenStatus = selectedStatus;
   const d=getWIBDate(), t=`${pad(d.getHours())}:${pad(d.getMinutes())}`;
   const today=getTodayWIB();
   const ket=document.getElementById('ketInput').value.trim();
-  const status=pendingType==='pulang'?'hadir':selectedStatus;
+  const status=absenType==='pulang'?'hadir':absenStatus;
   const btnC=document.getElementById('modalConfirm');
   const modalVisible = document.getElementById('modalOverlay').classList.contains('show');
   if(modalVisible){ btnC.disabled=true; btnC.textContent='📡 Verifikasi lokasi...'; }
@@ -1495,19 +1500,19 @@ async function doAbsen(nama){
 
     if(modalVisible) btnC.textContent='Menyimpan...';
     const {addDoc,getDocs,query,where,Timestamp}=window._fs;
-    const cekQ=query(window._col, where('nama','==',nama), where('tanggal','==',today), where('tipe','==',pendingType));
+    const cekQ=query(window._col, where('nama','==',nama), where('tanggal','==',today), where('tipe','==',absenType));
     const cekSnap=await getDocs(cekQ);
     if(!cekSnap.empty){
       closeModal();
-      showToast(pendingType==='masuk'?'Sudah absen masuk hari ini!':'Sudah absen pulang hari ini!','warn');
+      showToast(absenType==='masuk'?'Sudah absen masuk hari ini!':'Sudah absen pulang hari ini!','warn');
       await loadTodayLog(); onSiswaChange(); return;
     }
-    await addDoc(window._col,{ nama,tipe:pendingType,status,keterangan:ket, waktu:t,tanggal:today, timestamp:Timestamp.fromDate(d), hari:HARI[d.getDay()],
+    await addDoc(window._col,{ nama,tipe:absenType,status,keterangan:ket, waktu:t,tanggal:today, timestamp:Timestamp.fromDate(d), hari:HARI[d.getDay()],
       // Koordinat diambil fresh saat absen — bukan dari variabel global
       gps_lat: freshLat, gps_lng: freshLng, gps_dist: freshDist, gps_accuracy: freshAcc
     });
     closeModal();
-    showToast(pendingType==='masuk'?'Absen masuk berhasil! ✅':'Absen pulang berhasil! 🏠','success');
+    showToast(absenType==='masuk'?'Absen masuk berhasil! ✅':'Absen pulang berhasil! 🏠','success');
     await loadTodayLog(); loadDashboard(); onSiswaChange();
   } catch(e){ console.error(e); showToast('Gagal menyimpan. Cek koneksi!','error'); }
   finally { if(modalVisible){ btnC.disabled=false; btnC.textContent='Ya, Absen Sekarang'; } }
@@ -1645,7 +1650,7 @@ async function confirmAdminAction(){
   if(action === 'edit-by-tanggal'){
     const tanggal = document.getElementById('adminTanggalInput').value;
     const siswaDipilih = siswa ? siswa.split(',') : [];
-    const hariIdx = new Date(tanggal + 'T00:00:00').getDay(); // fix: hindari timezone shift
+    const hariIdx = new Date(tanggal + 'T00:00:00+07:00').getDay(); // Fix tz: paksa WIB
     let saved = 0, skipped = 0;
     for(const nama of siswaDipilih){
       const cekSnap = await getDocs(query(window._col, where('nama','==',nama), where('tanggal','==',tanggal), where('tipe','==','masuk')));
@@ -1665,13 +1670,15 @@ async function confirmAdminAction(){
     showToast(msg, 'success');
     await loadTodayLog(); loadDashboard(); loadRekap();
     await refreshExistingBadges();
+    // Bug #1 fix: reset status ke default 'alpha' + sync UI button setelah eksekusi
+    selectTanggalStatus('alpha');
+    // Uncheck semua siswa biar form bersih
+    toggleSelectAllSiswa(false);
     return;
   }
 
   if(action === 'hapus-record'){
     const nama = siswa;
-    const {deleteDoc, getDocs: gd, query: q, where: w} = window._fs;
-    const {getDocs: getDocs2, deleteDoc: del} = window._fs;
     try {
       // Hapus semua record (masuk & pulang) siswa ini hari ini
       const snapMasuk = await getDocs(query(window._col, where('nama','==',nama), where('tanggal','==',today)));
@@ -1688,7 +1695,8 @@ async function confirmAdminAction(){
   }
 
   if(action === 'hapus-by-tanggal'){
-    const tanggal = siswa; // siswa field dipakai untuk simpan tanggal
+    const tanggal = window._pendingHapusTanggal || siswa; // pakai variabel dedicated
+    window._pendingHapusTanggal = null; // reset setelah dipakai
     const docs = window._hapusTanggalDocs || [];
     const {deleteDoc} = window._fs;
     let berhasil = 0;
@@ -1729,7 +1737,7 @@ function renderSiswaCheckboxes(){
   const wrap = document.getElementById('siswaCheckboxList');
   if(!wrap) return;
   wrap.innerHTML = SISWA.map((nama, i) => `
-    <div class="siswa-checkbox-item" onclick="toggleSiswaCheck(${i})">
+    <div class="siswa-checkbox-item">
       <input type="checkbox" id="chk_siswa_${i}" value="${nama}" onchange="updateSelectedCount()"/>
       <label for="chk_siswa_${i}">${nama.toUpperCase()}</label>
       <span id="chk_exist_${i}" class="siswa-existing-badge" style="display:none;"></span>
@@ -1787,7 +1795,7 @@ async function adminEditByTanggal(){
   if(!tanggal){ showToast('Pilih tanggal dulu!','warn'); return; }
 
   // Validasi: tidak boleh input absen di hari Sabtu/Minggu
-  const hariTerpilih = new Date(tanggal + 'T00:00:00').getDay();
+  const hariTerpilih = new Date(tanggal + 'T00:00:00+07:00').getDay(); // Fix tz: paksa WIB biar ga off 1 hari di device UTC+lain
   if(hariTerpilih === 0 || hariTerpilih === 6){
     showToast('Tanggal yang dipilih adalah hari libur (Sabtu/Minggu)!','warn'); return;
   }
@@ -1848,7 +1856,7 @@ async function submitLaporan(){
   try {
     await addDoc(window._col,{
       tipe:'laporan-pancung', pelapor, target, tanggal:today,
-      timestamp:Timestamp.fromDate(new Date())
+      timestamp:Timestamp.fromDate(getWIBDate())
     });
     showToast(`Laporan terkirim! ✂️`,'success');
     document.getElementById('laporPelaporSelect').value='';
@@ -1932,7 +1940,7 @@ async function submitIzin(){
   if(!ket){ showToast('Tulis keterangan dulu!','warn'); return; }
 
   // Validasi: izin/sakit tidak berlaku di hari Sabtu/Minggu
-  const hariTerpilih = new Date(tanggal + 'T00:00:00').getDay();
+  const hariTerpilih = new Date(tanggal + 'T00:00:00+07:00').getDay(); // Fix tz: paksa WIB biar ga off 1 hari di device UTC+lain
   if(hariTerpilih === 0 || hariTerpilih === 6){
     showToast('Tanggal yang dipilih adalah hari libur (Sabtu/Minggu)!','warn'); return;
   }
@@ -1946,7 +1954,7 @@ async function submitIzin(){
     const cek = await getDocs(query(window._col, where('nama','==',nama), where('tanggal','==',tanggal), where('tipe','==','masuk')));
     if(!cek.empty){ showToast('Sudah ada catatan absen di tanggal ini!','warn'); btn.disabled=false; btn.textContent='Kirim Pengajuan'; return; }
 
-    const d = new Date(tanggal + 'T00:00:00');
+    const d = new Date(tanggal + 'T00:00:00+07:00'); // Fix tz: paksa WIB
     await addDoc(window._col,{
       nama, tipe:'masuk', status:izinType, keterangan:ket,
       waktu:'—', tanggal, timestamp:Timestamp.fromDate(new Date()),
@@ -2036,7 +2044,7 @@ async function loadDashboard(){
   // Hitung hadirMasuk & hadirPulang
   const hadirMasukLogs = masukLogs.filter(l=>l.status==='hadir');
   const hadirNama = new Set(hadirMasukLogs.map(l=>l.nama));
-  const pulangLogs = logs.filter(l=>l.tipe==='pulang');
+  const pulangLogs = logs.filter(l=>l.tipe==='pulang' && hadirNama.has(l.nama));
   const pulangNama = new Set(pulangLogs.map(l=>l.nama));
   const hadirMasuk = hadirNama.size;
   const hadirPulang = [...hadirNama].filter(n=>pulangNama.has(n)).length;
@@ -2261,10 +2269,12 @@ async function loadRekap(){
 
   window._rekapData = rekap;
   window._rekapRange = {dateFrom, dateTo};
+  window._rekapStale = false; // Fix stale export: tandai data fresh setelah load
 }
 
 function setRekapTab(tab, btn){
   currentRekapTab=tab;
+  window._rekapStale = true; // data akan berubah, tandai stale dulu
   document.querySelectorAll('.tab-inner').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById('customDateWrap').style.display=tab==='custom'?'block':'none';
@@ -2273,8 +2283,10 @@ function setRekapTab(tab, btn){
 
 // ===================== EXPORT =====================
 function exportWA(){
-  if(!window._rekapData){ showToast('Load rekap dulu','warn'); return; }
-  if(!window._rekapRange){ showToast('Load rekap dulu','warn'); return; }
+  if(!window._rekapData){ showToast('Load rekap dulu sebelum export!','warn'); return; }
+  if(!window._rekapRange){ showToast('Load rekap dulu sebelum export!','warn'); return; }
+  // Fix _rekapData stale: validasi bahwa data yang di-export sesuai tampilan
+  if(window._rekapStale){ showToast('Data rekap berubah, load ulang sebelum export!','warn'); return; }
   const {dateFrom,dateTo}=window._rekapRange;
   if(!dateFrom||!dateTo){ showToast('Rentang tanggal tidak valid!','warn'); return; }
 
@@ -2351,8 +2363,9 @@ function getKeteranganCSV(r) {
 }
 
 function exportCSV(){
-  if(!window._rekapData){ showToast('Load rekap dulu','warn'); return; }
-  if(!window._rekapRange){ showToast('Load rekap dulu','warn'); return; }
+  if(!window._rekapData){ showToast('Load rekap dulu sebelum export!','warn'); return; }
+  if(!window._rekapRange){ showToast('Load rekap dulu sebelum export!','warn'); return; }
+  if(window._rekapStale){ showToast('Data rekap berubah, load ulang sebelum export!','warn'); return; }
   const {dateFrom,dateTo}=window._rekapRange;
   if(!dateFrom||!dateTo){ showToast('Rentang tanggal tidak valid!','warn'); return; }
 
@@ -2415,7 +2428,7 @@ async function previewHapusByTanggal(){
   });
 
   const colorMap = {hadir:'var(--green)',alpha:'var(--red)',pancung:'var(--orange)',izin:'var(--yellow)',sakit:'var(--purple)'};
-  const hari = new Date(tanggal + 'T00:00:00').toLocaleDateString('id-ID',{weekday:'long'}); // fix: hindari timezone shift
+  const hari = new Date(tanggal + 'T00:00:00+07:00').toLocaleDateString('id-ID',{weekday:'long'}); // Fix tz: paksa WIB
 
   let html = `<div style="background:var(--red-bg);border:1px solid var(--red-border);border-radius:10px;padding:10px;margin-bottom:8px;">
     <div style="font-size:12px;font-weight:700;color:var(--red);margin-bottom:4px;">📅 ${hari}, ${tanggal} — ${docs.length} record ditemukan</div>
@@ -2455,8 +2468,9 @@ async function eksekusiHapusByTanggal(tanggal){
   if(docs.length === 0){ showToast('Tidak ada data','warn'); return; }
 
   // Wajib PIN admin
+  // Pakai variabel dedicated agar tidak abuse pendingAdminSiswa
   pendingAdminAction = 'hapus-by-tanggal';
-  pendingAdminSiswa = tanggal;
+  window._pendingHapusTanggal = tanggal; // <-- dedicated, bukan pendingAdminSiswa
   showPinModal('hapus-by-tanggal', `untuk hapus semua record tanggal ${tanggal}`);
 }
 
@@ -2665,10 +2679,11 @@ function showPage(p, e){
   target.classList.add(goingRight ? 'slide-from-right' : 'slide-from-left');
   void target.offsetWidth;
   target.classList.add('active');
-  // Position-aware animation
-  requestAnimationFrame(() => requestAnimationFrame(() => animatePage(target)));
+  // Bug #5 fix: kasih jeda 80ms biar DOM + konten sempat render
+  // sebelum animatePage baca getBoundingClientRect(), hindari rect semua 0
   if(p==='dashboard') loadDashboard();
   if(p==='rekap') loadRekap();
+  setTimeout(() => animatePage(target), 80);
 }
 
 
@@ -2804,7 +2819,7 @@ function enterApp() {
       void activePage.offsetWidth;
       activePage.classList.add('active');
       // Jalankan setelah display:block ter-render
-      requestAnimationFrame(() => requestAnimationFrame(() => animatePage(activePage)));
+      setTimeout(() => animatePage(activePage), 80);
     }
   }, 3100);
 
